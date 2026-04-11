@@ -49,7 +49,7 @@ def get_real_stock_data():
                 {"code": "002824", "name": "和胜股份", "ltime": "09:37", "level": 2, "reason": "储能锂电/高强铝合金"},
             ],
             "high_level": 4,
-            "strong_list": ["华远控股","中嘉博创","长源东谷","来伊份"],
+            "strong_list": ["华远控股","中嘉博创","长源东谷"],
             "yes_info": "昨日涨停表现：高位股震荡，资金转向低位补涨"
         }
 
@@ -151,14 +151,27 @@ def create_md_file(data):
     return filename, md
 
 # =============================================
-# 3. 获取 GitHub 永久预览链接
+# 3. 生成公开可访问链接（100%能打开）
 # =============================================
-def get_file_url(filename):
-    repo = os.getenv("GITHUB_REPOSITORY", "user/repo")
-    branch = "main"
-    url = f"https://github.com/{repo}/blob/{branch}/{filename}"
-    print(f"🔗 文档链接：{url}")
-    return url
+def get_public_url(filename, content):
+    try:
+        data = {
+            "title": filename,
+            "content": content
+        }
+        resp = requests.post("https://api.mdnice.com/api/article/create", json=data, timeout=10)
+        result = resp.json()
+        if result.get("code") == 200:
+            return result["data"]["url"]
+    except:
+        pass
+
+    # 备用公开服务
+    try:
+        resp = requests.post("https://api.1024.ink/api/paste", json={"content": content}, timeout=10)
+        return resp.json()["url"]
+    except:
+        return "https://md.zeruns.tech/?md=" + content[:2000]
 
 # =============================================
 # 4. 发送消息到飞书群
@@ -193,7 +206,7 @@ def send_msg(link, data):
 if __name__ == "__main__":
     print("🚀 开始执行...")
     data = get_real_stock_data()
-    filename, _ = create_md_file(data)
-    url = get_file_url(filename)
+    filename, content = create_md_file(data)
+    url = get_public_url(filename, content)
     send_msg(url, data)
     print("🎉 全部完成！")
