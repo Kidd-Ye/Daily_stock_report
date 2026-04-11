@@ -60,49 +60,31 @@ def build_md(data):
     return md, f"涨停复盘_{date}.md"
 
 # ---------------------
-# 3. 飞书鉴权
+# 3. 直接发送飞书群消息（个人号可用）
 # ---------------------
-def get_fs_token():
-    url = "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal"
-    res = requests.post(url, json={
-        "app_id": os.environ["FEISHU_APP_ID"],
-        "app_secret": os.environ["FEISHU_APP_SECRET"]
-    })
-    return res.json()["tenant_access_token"]
+def send_to_feishu_group(content):
+    webhook = os.environ.get("FEISHU_WEBHOOK")
+    if not webhook:
+        print("❌ 请配置 FEISHU_WEBHOOK")
+        return
 
-# ---------------------
-# 4. 创建飞书知识库文档
-# ---------------------
-def create_doc(title, content, token):
-    url = "https://open.feishu.cn/open-apis/docx/v1/documents"
-    headers = {"Authorization": f"Bearer {token}"}
-    data = {
-        "title": title,
-        "content": content,
-        "folder_token": os.environ["KNOWLEDGE_BASE_ID"]
-    }
-    resp = requests.post(url, headers=headers, json=data)
-    return resp.json()["data"]["document"]["url"]
-
-# ---------------------
-# 5. 发消息到飞书群
-# ---------------------
-def send_msg(url):
-    webhook = os.environ["FEISHU_WEBHOOK"]
-    data = {
+    message = {
         "msg_type": "text",
-        "content": {"text": f"📈 涨停复盘已更新\n{url}"}
+        "content": {
+            "text": content
+        }
     }
-    requests.post(webhook, json=data)
+    resp = requests.post(webhook, json=message)
+    print("✅ 飞书消息发送成功")
 
 # ---------------------
-# 主程序
+# 主程序（个人飞书完美版）
 # ---------------------
 if __name__ == "__main__":
     print("开始执行...")
     data = get_limit_data()
     md_content, md_title = build_md(data)
-    token = get_fs_token()
-    doc_url = create_doc(md_title, md_content, token)
-    send_msg(doc_url)
-    print("✅ 执行完成：", doc_url)
+    
+    # 直接发送完整内容到飞书群
+    send_to_feishu_group(md_content)
+    print("✅ 全部执行完成！")
