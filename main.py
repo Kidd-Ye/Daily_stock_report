@@ -583,7 +583,7 @@ def commit_to_github(filepath, content):
         subprocess.run(["git", "stash"], check=True, capture_output=True)
         subprocess.run(["git", "pull", "--rebase", "origin", "main"], check=True, capture_output=True)
         subprocess.run(["git", "stash", "pop"], check=True, capture_output=True)
-        subprocess.run(["git", "add", filepath], check=True, capture_output=True)
+        subprocess.run(["git", "add", filepath, "reports/涨停复盘_*.md"], check=True, capture_output=True)
         subprocess.run([
             "git", "commit", "-m",
             f"📈 涨停复盘 {datetime.now().strftime('%Y-%m-%d')}"
@@ -592,8 +592,9 @@ def commit_to_github(filepath, content):
 
         # GitHub Pages 链接（需仓库为 Public）
         pages_url = f"https://{repo.split('/')[0].lower()}.github.io/{repo.split('/')[1]}/"
-        print(f"✅ 已提交，Pages 链接: {pages_url}")
-        return pages_url
+        report_url = f"https://{repo.split('/')[0].lower()}.github.io/{repo.split('/')[1]}/docs/index.html"
+        print(f"✅ 已提交，报告链接: {report_url}")
+        return report_url
 
     except subprocess.CalledProcessError as e:
         err_msg = e.stderr.decode() if e.stderr else str(e)
@@ -707,6 +708,12 @@ if __name__ == "__main__":
         f.write(md_content)
     print(f"✅ 已生成 {md_filename}")
 
+    # 保存 MD 到 reports 目录（方便直接访问）
+    reports_filename = f"reports/涨停复盘_{trade_date}.md"
+    with open(reports_filename, "w", encoding="utf-8") as f:
+        f.write(md_content)
+    print(f"✅ 已保存 {reports_filename}")
+
     # 同时生成 HTML
     html_content = generate_html_report(stocks, trade_date)
     with open("docs/index.html", "w", encoding="utf-8") as f:
@@ -716,7 +723,8 @@ if __name__ == "__main__":
     # 3. 提交到 GitHub
     url = commit_to_github("docs/index.html", html_content)
     if not url:
-        url = os.getenv("PAGES_URL", "https://github.com/Kidd-Ye/Daily_stock_report")
+        repo = os.getenv("GITHUB_REPOSITORY", "Kidd-Ye/Daily_stock_report")
+        url = f"https://{repo.split('/')[0].lower()}.github.io/{repo.split('/')[1]}/docs/index.html"
 
     # 4. 发送飞书
     send_feishu_card(url, stocks, trade_date)
