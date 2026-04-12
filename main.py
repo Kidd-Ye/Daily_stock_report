@@ -418,12 +418,18 @@ def upload_file_to_feishu(token, file_path):
     ext = os.path.splitext(file_path)[1].lstrip(".").lower() or "pdf"
     file_type = ext if ext in ("pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx") else "pdf"
     try:
+        basename = os.path.basename(file_path)
+        safe_name = re.sub(r"[^A-Za-z0-9_.-]+", "_", basename) or f"report.{file_type}"
+        mime = "application/pdf" if file_type == "pdf" else "application/octet-stream"
         with open(file_path, "rb") as f:
-            files = {"file": (os.path.basename(file_path), f)}
-            data = {"file_type": file_type}
+            files = {"file": (safe_name, f, mime)}
+            data = {"file_type": file_type, "file_name": safe_name}
             headers = {"Authorization": f"Bearer {token}"}
             resp = requests.post(url, headers=headers, files=files, data=data, timeout=30)
-            resp.raise_for_status()
+            if resp.status_code != 200:
+                logid = resp.headers.get("X-Tt-Logid", "")
+                print(f"❌ 上传文件失败: HTTP {resp.status_code} {resp.text} {logid}".strip())
+                return None
             res = resp.json()
             if res.get("code") == 0 and res.get("data", {}).get("file_key"):
                 return res["data"]["file_key"]
@@ -469,15 +475,13 @@ def send_feishu_report(file_path, stocks, trade_date, backup_url=None):
         return
 
     file_key = upload_file_to_feishu(token, file_path)
-    if not file_key:
-        return
+    # 先尝试发送文件；失败则降级为文本
+    if file_key:
+        ok = send_feishu_message(token, receive_id, "file", {"file_key": file_key}, receive_id_type)
+        if not ok:
+            file_key = None
 
-    # 先发送文件
-    ok = send_feishu_message(token, receive_id, "file", {"file_key": file_key}, receive_id_type)
-    if not ok:
-        return
-
-    # 再发送简要数据
+    # 发送简要数据（若文件失败则作为降级通知）
     date_str = datetime.strptime(trade_date, "%Y%m%d").strftime("%Y年%m月%d日")
     total = len(stocks)
     board20_count = len([s for s in stocks if s.get("is_20cm", False)])
@@ -491,6 +495,8 @@ def send_feishu_report(file_path, stocks, trade_date, backup_url=None):
     )
     if backup_url:
         text += f"\n备用链接：{backup_url}"
+    if not file_key:
+        text += "\n（文件上传失败，已发送文字通知）"
     send_feishu_message(token, receive_id, "text", {"text": text}, receive_id_type)
 
     date_str = datetime.strptime(trade_date, "%Y%m%d").strftime("%Y年%m月%d日")
