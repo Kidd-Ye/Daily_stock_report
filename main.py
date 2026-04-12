@@ -449,7 +449,10 @@ def send_feishu_message(token, receive_id, msg_type, content, receive_id_type="c
     }
     try:
         resp = requests.post(url, headers=headers, json=payload, timeout=10)
-        resp.raise_for_status()
+        if resp.status_code != 200:
+            logid = resp.headers.get("X-Tt-Logid", "")
+            print(f"❌ 飞书发送失败: HTTP {resp.status_code} {resp.text} {logid}".strip())
+            return False
         data = resp.json()
         if data.get("code") == 0:
             return True
@@ -498,62 +501,6 @@ def send_feishu_report(file_path, stocks, trade_date, backup_url=None):
     if not file_key:
         text += "\n（文件上传失败，已发送文字通知）"
     send_feishu_message(token, receive_id, "text", {"text": text}, receive_id_type)
-
-    date_str = datetime.strptime(trade_date, "%Y%m%d").strftime("%Y年%m月%d日")
-    total = len(stocks)
-    board20_count = len([s for s in stocks if s.get("is_20cm", False)])
-    board_more = len([s for s in stocks if s.get("bd", 1) >= 2])
-
-    # 成交额前5
-    top5 = sorted(stocks, key=lambda x: x.get("amount", 0), reverse=True)[:5]
-    stock_lines = ""
-    for s in top5:
-        bd = f"{s.get('bd', 1)}板" if s.get('bd', 1) > 1 else ""
-        stock_lines += f"\n• {s['name']}（{s['code']}）{bd}"
-
-    card = {
-        "msg_type": "interactive",
-        "card": {
-            "config": {"wide_screen_mode": True},
-            "header": {
-                "title": {"tag": "plain_text", "content": f"📈 A股涨停复盘 {date_str}"},
-                "template": "red"
-            },
-            "elements": [
-                {
-                    "tag": "div",
-                    "text": {"tag": "lark_md",
-                        "content": f"**涨停总数：** {total} 家\n"
-                                   f"**连板个股：** {board_more} 家\n"
-                                   f"**20CM个股：** {board20_count} 只"
-                    }
-                },
-                {"tag": "hr"},
-                {
-                    "tag": "div",
-                    "text": {"tag": "lark_md", "content": f"**成交额前五：**{stock_lines}"}
-                },
-                {
-                    "tag": "action",
-                    "actions": [{
-                        "tag": "button",
-                        "text": {"tag": "plain_text", "content": "📄 下载复盘 PDF 文档"},
-                        "type": "primary",
-                        "url": url
-                    }]
-                }
-            ]
-        }
-    }
-
-    try:
-        resp = requests.post(webhook, json=card, timeout=10)
-        if resp.status_code == 200:
-            print("✅ 飞书卡片发送成功")
-        else:
-            print(f"❌ 飞书发送失败: {resp.text}")
-    except Exception as e:
-        print(f"❌ 飞书请求异常: {e}")
 
 
 # =============================================
