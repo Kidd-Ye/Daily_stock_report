@@ -38,19 +38,20 @@ function formatTime(t) {
 // ========== 表格生成器 ==========
 function makeTable(headers, rows, colWidths) {
   const total = colWidths.reduce((a, b) => a + b, 0);
+  const widths = colWidths.map(w => (w / total * 100).toFixed(2) + '%');
   const ths = headers.map((h, i) =>
-    `<th style="width:${colWidths[i]}px;background:${LIGHT_RED_BG};color:${RED};font-weight:bold;font-size:10pt;text-align:center;padding:6px 8px;border:1px solid ${BORDER_COLOR};font-family:'Noto Sans CJK SC','Microsoft YaHei','PingFang SC',sans-serif;">${escapeHtml(h)}</th>`
+    `<th style="width:${widths[i]};background:${LIGHT_RED_BG};color:${RED};font-weight:bold;font-size:10pt;text-align:center;padding:6px 8px;border:1px solid ${BORDER_COLOR};font-family:'Noto Sans CJK SC','Microsoft YaHei','PingFang SC',sans-serif;word-break:break-word;white-space:normal;">${escapeHtml(h)}</th>`
   ).join('');
 
   const trs = rows.map((row, ri) => {
     const bg = ri % 2 === 0 ? '#FFFFFF' : LIGHT_GRAY_BG;
     const tds = row.map((text, ci) =>
-      `<td style="width:${colWidths[ci]}px;background:${bg};color:${DARK};font-size:10pt;text-align:center;padding:6px 8px;border:1px solid ${BORDER_COLOR};font-family:'Noto Sans CJK SC','Microsoft YaHei','PingFang SC',sans-serif;">${escapeHtml(text ?? '—')}</td>`
+      `<td style="width:${widths[ci]};background:${bg};color:${DARK};font-size:10pt;text-align:center;padding:6px 8px;border:1px solid ${BORDER_COLOR};font-family:'Noto Sans CJK SC','Microsoft YaHei','PingFang SC',sans-serif;word-break:break-word;white-space:normal;">${escapeHtml(text ?? '—')}</td>`
     ).join('');
     return `<tr>${tds}</tr>`;
   }).join('');
 
-  return `<table style="border-collapse:collapse;width:${total}px;font-size:10pt;">${ths}${trs}</table>`;
+  return `<table style="border-collapse:collapse;width:100%;table-layout:fixed;font-size:10pt;"><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`;
 }
 
 // ========== 生成市场热点 ==========
@@ -220,7 +221,9 @@ function buildHtml(stocks, tradeDate, marketComment) {
     padding-top: 8px;
   }
   .page-break { page-break-before: always; }
-  table { page-break-inside: avoid; }
+  table { page-break-inside: auto; }
+  tr { page-break-inside: avoid; page-break-after: auto; }
+  thead { display: table-header-group; }
 </style>
 </head>
 <body>
