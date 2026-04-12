@@ -33,6 +33,8 @@ def _extract_stocks_from_mx(result: Dict[str, Any]) -> List[Dict[str, Any]]:
     """
     从妙想 API 返回结果中提取涨停股票列表。
     妙想 API 返回的是标准化表格数据，需要解析 dataTableDTOList。
+    每个元素是一个"指标单元"（1个证券 + 1个指标的数据），
+    但对于列表类查询，一个 dto 可能包含多只股票的数据（多行）。
     """
     status = result.get("status")
     if status != 0:
@@ -40,67 +42,64 @@ def _extract_stocks_from_mx(result: Dict[str, Any]) -> List[Dict[str, Any]]:
         return []
 
     data = result.get("data", {})
-    # DEBUG: 打印返回结构的关键路径
-    print(f"🔍 [DEBUG] result keys: {list(result.keys())}")
-    print(f"🔍 [DEBUG] data keys: {list(data.keys()) if isinstance(data, dict) else type(data)}")
     inner_data = data.get("data", {})
-    print(f"🔍 [DEBUG] inner_data keys: {list(inner_data.keys()) if isinstance(inner_data, dict) else type(inner_data)}")
-    # 检查多个可能的路径
-    print(f"🔍 [DEBUG] inner_data.dataTableDTOList: {len(inner_data.get('dataTableDTOList', []))}")
     search_result = inner_data.get("searchDataResultDTO", {})
-    print(f"🔍 [DEBUG] search_result keys: {list(search_result.keys()) if isinstance(search_result, dict) else type(search_result)}")
-    print(f"🔍 [DEBUG] search_result.dataTableDTOList: {len(search_result.get('dataTableDTOList', []))}")
-    # 打印 inner_data 的完整结构（截断）
-    inner_data_str = json.dumps(inner_data, ensure_ascii=False)
-    print(f"🔍 [DEBUG] inner_data full (first 3000 chars): {inner_data_str[:3000]}")
 
-    # 优先从 inner_data 直接取 dataTableDTOList，其次从 searchDataResultDTO 取
+    # 优先从 inner_data 直接取，其次从 searchDataResultDTO 取
     dto_list = inner_data.get("dataTableDTOList", []) or search_result.get("dataTableDTOList", [])
-    print(f"🔍 [DEBUG] final dto_list count: {len(dto_list)}")
 
     if not dto_list:
-        print("⚠️ 妙想 API 返回数据为空")
+        print("⚠️ 妙想 API 返回数据为空（dataTableDTOList 为空）")
         return []
 
+    print(f"🔍 [DEBUG] 获取到 {len(dto_list)} 个数据表")
+
     stocks = []
-    for dto in dto_list:
+    for idx, dto in enumerate(dto_list):
         table = dto.get("table") or {}
         name_map = dto.get("nameMap") or {}
+        title = dto.get("title", f"表{idx}")
+        entity_name = dto.get("entityName", "")
 
         if isinstance(name_map, list):
             name_map = {str(i): v for i, v in enumerate(name_map)}
 
-        head_names = table.get("headName") or []
+        print(f"🔍 [DEBUG] 处理 dto[{idx}]: title={title}, entity={entity_name}")
+        print(f"🔍 [DEBUG]   nameMap: {name_map}")
+        print(f"🔍 [DEBUG]   table keys: {list(table.keys())}")
 
-        # 检测是否有多行数据（每行一只股票）
-        # 如果 headName 长度 > 1，则每行是一个日期/维度
-        # 如果 headName 长度 == 0 且有 headNameSub，则可能是按股票列表
+        # 检测数据行数
         indicator_keys = [k for k in table.keys() if k != "headName"]
         if not indicator_keys:
             continue
 
-        # 取第一个指标列的长度作为行数
         first_indicator = table.get(indicator_keys[0], [])
         row_count = len(first_indicator)
+        print(f"🔍 [DEBUG]   行数: {row_count}, 指标列: {indicator_keys[:5]}")
 
-        # 尝试构建字段映射（妙想 API 编码 → 标准字段名）
-        # 通过 nameMap 识别关键字段
+        if row_count == 0:
+            continue
+
+        # 构建字段映射
         code_field = _find_field(name_map, ["股票代码", "代码", "secuCode", "证券代码"])
-        name_field = _find_field(name_map, ["股票名称", "名称", "证券简称", "secuName"])
+        name_field = _find_field(name_map, ["股票名称", "名称", "证券简称", "secuName", "名称"])
         change_field = _find_field(name_map, ["涨跌幅", "涨跌", "涨幅"])
         amount_field = _find_field(name_map, ["成交额", "成交金额", "总金额"])
         turnover_field = _find_field(name_map, ["换手率", "换手"])
         price_field = _find_field(name_map, ["最新价", "收盘价", "涨停价"])
         reason_field = _find_field(name_map, ["所属行业", "行业", "概念", "板块", "涨停原因"])
 
+        print(f"🔍 [DEBUG]   字段映射: code={code_field}, name={name_field}, change={change_field}, "
+              f"amount={amount_field}, turnover={turnover_field}, price={price_field}, reason={reason_field}")
+
         for i in range(row_count):
             stock = {
                 "code": _get_value(table, code_field, i) or "",
                 "name": _get_value(table, name_field, i) or "",
-                "bd": 1,  # 妙想默认不提供连板数
+                "bd": 1,
                 "amount": _parse_amount(_get_value(table, amount_field, i)),
                 "turnover": _parse_float(_get_value(table, turnover_field, i)),
-                "first_time": "",  # 妙想不提供涨停时间
+                "first_time": "",
                 "last_time": "",
                 "zt_price": _parse_float(_get_value(table, price_field, i)),
                 "is_20cm": False,
@@ -108,18 +107,18 @@ def _extract_stocks_from_mx(result: Dict[str, Any]) -> List[Dict[str, Any]]:
                 "zbc": 0,
             }
 
-            # 判断 20CM
             code = stock.get("code", "")
             if code.startswith("30") or code.startswith("688"):
                 stock["is_20cm"] = True
 
-            # 判断涨停（涨幅 >= 9.9% 或 19.9%）
+            # 判断涨停（涨幅 >= 9.9%）
             change = _parse_float(_get_value(table, change_field, i))
             if change and change < 9.9:
-                continue  # 不是涨停，跳过
+                continue
 
             if stock["code"] and stock["name"]:
                 stocks.append(stock)
+                print(f"🔍 [DEBUG]   ✓ 涨停股: {stock['name']}({stock['code']}) 涨幅={change}")
 
     # 去重
     seen = set()
@@ -182,6 +181,11 @@ def get_limit_up_stocks_mx(trade_date: str = None) -> List[Dict[str, Any]]:
     """
     通过妙想 API 获取涨停股票数据。
 
+    策略：妙想 API 是自然语言查询引擎，不支持"涨停股票池"这种筛选查询。
+    采用多轮查询 + 本地筛选的方式：
+    1. 查询 A 股涨幅排行数据
+    2. 在本地筛选涨幅 >= 9.9% 的股票
+
     :param trade_date: 交易日期 (YYYYMMDD)，如 "20260410"
     :return: 标准化的涨停股票列表（与 push2ex 接口返回格式一致）
     """
@@ -192,47 +196,54 @@ def get_limit_up_stocks_mx(trade_date: str = None) -> List[Dict[str, Any]]:
         print("   获取地址: https://dl.dfcfs.com/m/itc4")
         return []
 
-    # 构建查询语句
     date_str = ""
     if trade_date and len(trade_date) == 8:
         date_str = f"{trade_date[:4]}年{int(trade_date[4:6])}月{int(trade_date[6:8])}日"
 
+    # 多种查询语句尝试，妙想 API 对自然语言的理解有限，需要找到它支持的问法
+    queries = []
     if date_str:
-        query = f"{date_str}A股涨停股票 涨停价 涨跌幅 成交额 换手率 所属行业"
+        queries = [
+            f"{date_str}沪深A股涨幅排名前100 涨跌幅 成交额 换手率 所属行业 最新价",
+            f"{date_str}A股市场涨幅排行榜 股票名称 涨跌幅 成交额",
+            f"{date_str}所有A股涨跌幅排行 涨跌幅 成交额 换手率",
+        ]
     else:
-        query = "今日A股涨停股票 涨停价 涨跌幅 成交额 换手率 所属行业"
+        queries = [
+            "今日沪深A股涨幅排名前100 涨跌幅 成交额 换手率 所属行业 最新价",
+            "今日A股市场涨幅排行榜 股票名称 涨跌幅 成交额",
+            "今日所有A股涨跌幅排行 涨跌幅 成交额 换手率",
+        ]
 
-    print(f"📥 [妙想] 正在获取涨停数据: {query}")
+    all_stocks = []
 
-    try:
-        result = _mx_query(query, api_key)
-        stocks = _extract_stocks_from_mx(result)
+    for i, query in enumerate(queries):
+        print(f"📥 [妙想] 查询 {i+1}/{len(queries)}: {query}")
 
-        if stocks:
-            print(f"✅ [妙想] 获取到 {len(stocks)} 只涨停股票")
-        else:
-            print("⚠️ [妙想] 未能提取涨停数据，尝试补充查询...")
-
-            # 补充查询：尝试用不同的问句
-            if date_str:
-                query2 = f"{date_str}涨幅超过9.9%的股票 涨跌幅 成交额 所属行业"
-            else:
-                query2 = "今日涨幅超过9.9%的股票 涨跌幅 成交额 所属行业"
-
-            print(f"📥 [妙想] 补充查询: {query2}")
-            result2 = _mx_query(query2, api_key)
-            stocks = _extract_stocks_from_mx(result2)
+        try:
+            result = _mx_query(query, api_key)
+            stocks = _extract_stocks_from_mx(result)
 
             if stocks:
-                print(f"✅ [妙想] 补充查询获取到 {len(stocks)} 只涨停股票")
+                print(f"✅ [妙想] 查询 {i+1} 获取到 {len(stocks)} 只涨停股票")
+                # 合并去重
+                existing_codes = {s["code"] for s in all_stocks}
+                for s in stocks:
+                    if s["code"] not in existing_codes:
+                        all_stocks.append(s)
+                        existing_codes.add(s["code"])
+                break  # 有数据就不再尝试下一个查询
             else:
-                print("❌ [妙想] 所有查询均未返回涨停数据")
+                print(f"⚠️ [妙想] 查询 {i+1} 未返回涨停数据")
 
-        return stocks
+        except requests.exceptions.RequestException as e:
+            print(f"❌ [妙想] 查询 {i+1} 网络请求失败: {e}")
+        except Exception as e:
+            print(f"❌ [妙想] 查询 {i+1} 异常: {e}")
 
-    except requests.exceptions.RequestException as e:
-        print(f"❌ [妙想] 网络请求失败: {e}")
-        return []
-    except Exception as e:
-        print(f"❌ [妙想] 获取涨停数据异常: {e}")
-        return []
+    if all_stocks:
+        print(f"✅ [妙想] 共获取到 {len(all_stocks)} 只涨停股票")
+    else:
+        print("❌ [妙想] 所有查询均未返回涨停数据，妙想 API 可能不支持涨停池查询")
+
+    return all_stocks
