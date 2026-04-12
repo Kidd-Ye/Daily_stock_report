@@ -11,6 +11,7 @@ const {
   LevelFormat, UnderlineType
 } = require('./node_modules/docx');
 const fs = require('fs');
+const path = require('path');
 
 // ========== 样式常量 ==========
 const RED = 'C0392B';
@@ -388,7 +389,6 @@ function generateHotspots(stocks, board20, moreBoards, sortedIndustry, zbcStocks
 
 // ========== 主程序 ==========
 if (require.main === module) {
-  const fs = require('fs');
   const inputFile = process.argv[2] || 'stocks.json';
   const tradeDate = process.argv[3] || new Date().toISOString().slice(0,10).replace(/-/g,'');
   const outputFile = process.argv[4] || `涨停复盘_${tradeDate}.docx`;
@@ -396,6 +396,10 @@ if (require.main === module) {
 
   const stocks = JSON.parse(fs.readFileSync(inputFile, 'utf8'));
   const doc = generateDocx(stocks, tradeDate, marketComment);
+  const outDir = path.dirname(outputFile);
+  if (outDir && outDir !== '.') {
+    fs.mkdirSync(outDir, { recursive: true });
+  }
   Packer.toBuffer(doc).then(buf => {
     fs.writeFileSync(outputFile, buf);
     console.log('OK:' + outputFile);

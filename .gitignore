@@ -10,6 +10,7 @@ __pycache__/
 *.log
 *.tmp
 stocks.json
+trading_calendar.json
 
 # macOS
 .DS_Store

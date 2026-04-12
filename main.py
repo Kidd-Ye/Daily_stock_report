@@ -16,6 +16,205 @@ from datetime import datetime, timedelta
 # =============================================
 # 1. 获取东方财富涨停数据
 # =============================================
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+CALENDAR_FILE = os.path.join(ROOT_DIR, "trading_calendar.json")
+
+
+def _date_str_to_date(s):
+    return datetime.strptime(s, "%Y%m%d").date()
+
+
+def _normalize_time(t):
+    if not t:
+        return ""
+    t = re.sub(r"[^0-9]", "", str(t))
+    if len(t) == 4:
+        return t + "00"
+    if len(t) == 5:
+        return t
+    return t.zfill(6)
+
+
+def _pick_earlier_time(a, b):
+    na = _normalize_time(a)
+    nb = _normalize_time(b)
+    if not na:
+        return b or a
+    if not nb:
+        return a
+    return a if na <= nb else b
+
+
+def _pick_later_time(a, b):
+    na = _normalize_time(a)
+    nb = _normalize_time(b)
+    if not na:
+        return b or a
+    if not nb:
+        return a
+    return a if na >= nb else b
+
+
+def _merge_reason(r1, r2):
+    r1 = r1 or ""
+    r2 = r2 or ""
+    if not r1:
+        return r2
+    if not r2:
+        return r1
+    if r1 == r2:
+        return r1
+    if r2 in r1:
+        return r1
+    if r1 in r2:
+        return r2
+    return f"{r1}/{r2}"
+
+
+def dedupe_stocks(stocks):
+    """按股票代码去重，保留更完整的数据"""
+    by_code = {}
+    for s in stocks:
+        code = s.get("code")
+        if not code:
+            continue
+        if code not in by_code:
+            by_code[code] = dict(s)
+        else:
+            a = by_code[code]
+            b = s
+            merged = dict(a)
+            merged["name"] = a.get("name") or b.get("name") or ""
+            merged["bd"] = max(a.get("bd", 1), b.get("bd", 1))
+            merged["amount"] = max(a.get("amount", 0), b.get("amount", 0))
+            merged["turnover"] = max(a.get("turnover", 0), b.get("turnover", 0))
+            merged["first_time"] = _pick_earlier_time(a.get("first_time", ""), b.get("first_time", ""))
+            merged["last_time"] = _pick_later_time(a.get("last_time", ""), b.get("last_time", ""))
+            merged["zt_price"] = max(a.get("zt_price", 0), b.get("zt_price", 0))
+            merged["is_20cm"] = bool(a.get("is_20cm")) or bool(b.get("is_20cm"))
+            merged["reason"] = _merge_reason(a.get("reason", ""), b.get("reason", ""))
+            merged["zbc"] = max(a.get("zbc", 0), b.get("zbc", 0))
+            by_code[code] = merged
+    deduped = list(by_code.values())
+    if len(deduped) != len(stocks):
+        print(f"🔁 去重完成: {len(stocks)} -> {len(deduped)}")
+    return deduped
+
+
+def _load_trading_calendar():
+    if not os.path.exists(CALENDAR_FILE):
+        return None, None
+    try:
+        with open(CALENDAR_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, list):
+            return data, None
+        if isinstance(data, dict):
+            return data.get("dates", []), data.get("updated_at")
+    except Exception as e:
+        print(f"⚠️ 读取交易日历失败: {e}")
+    return None, None
+
+
+def _save_trading_calendar(dates):
+    try:
+        payload = {
+            "updated_at": datetime.now().strftime("%Y-%m-%d"),
+            "dates": sorted(dates),
+        }
+        with open(CALENDAR_FILE, "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False, indent=2)
+        print(f"✅ 交易日历已更新: {CALENDAR_FILE}")
+    except Exception as e:
+        print(f"⚠️ 写入交易日历失败: {e}")
+
+
+def _calendar_is_stale(dates, updated_at, today):
+    if not dates:
+        return True
+    if not updated_at:
+        return True
+    try:
+        updated_date = datetime.strptime(updated_at, "%Y-%m-%d").date()
+    except Exception:
+        return True
+    if (today - updated_date).days >= 7:
+        return True
+    try:
+        latest_date = _date_str_to_date(max(dates))
+    except Exception:
+        return True
+    if (today - latest_date).days > 10:
+        return True
+    return False
+
+
+def _fetch_trading_calendar_from_eastmoney(today, days=400):
+    """通过东方财富指数K线获取近一段时间交易日历"""
+    beg = (today - timedelta(days=days)).strftime("%Y%m%d")
+    end = today.strftime("%Y%m%d")
+    url = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
+    params = {
+        "secid": "1.000001",  # 上证指数
+        "fields1": "f1,f2,f3,f4,f5,f6",
+        "fields2": "f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61",
+        "klt": "101",
+        "fqt": "1",
+        "beg": beg,
+        "end": end,
+    }
+    headers = {"User-Agent": "Mozilla/5.0", "Referer": "https://quote.eastmoney.com/"}
+    try:
+        resp = requests.get(url, params=params, headers=headers, timeout=15)
+        resp.raise_for_status()
+        data = resp.json()
+        klines = data.get("data", {}).get("klines", [])
+        dates = [k.split(",")[0].replace("-", "") for k in klines if k]
+        return dates
+    except Exception as e:
+        print(f"⚠️ 拉取交易日历失败: {e}")
+        return []
+
+
+def ensure_trading_calendar():
+    today = datetime.now().date()
+    dates, updated_at = _load_trading_calendar()
+    if _calendar_is_stale(dates, updated_at, today):
+        print("📅 交易日历缺失或过期，尝试在线更新...")
+        dates = _fetch_trading_calendar_from_eastmoney(today)
+        if dates:
+            _save_trading_calendar(dates)
+    return dates or []
+
+
+def get_trade_date():
+    """通过交易日历计算上一交易日，支持环境变量覆盖"""
+    env_date = os.getenv("TRADE_DATE", "").strip()
+    if env_date:
+        print(f"📌 使用环境变量指定交易日: {env_date}")
+        return env_date
+
+    today = datetime.now().date()
+    use_today = os.getenv("USE_TODAY_IF_TRADE_DAY", "").lower() in ("1", "true", "yes")
+    dates = ensure_trading_calendar()
+    if dates:
+        dates_sorted = sorted(dates)
+        today_str = today.strftime("%Y%m%d")
+        if use_today:
+            candidates = [d for d in dates_sorted if d <= today_str]
+        else:
+            candidates = [d for d in dates_sorted if d < today_str]
+        if candidates:
+            trade_date = candidates[-1]
+            print(f"📅 交易日历计算交易日: {trade_date}")
+            return trade_date
+
+    # 兜底：沿用原有简单规则
+    if today.weekday() == 0:  # 周一
+        return (today - timedelta(days=3)).strftime("%Y%m%d")
+    if today.weekday() in (5, 6):  # 周六、周日
+        return (today - timedelta(days=today.weekday() - 4)).strftime("%Y%m%d")
+    return (today - timedelta(days=1)).strftime("%Y%m%d")
 def get_limit_up_stocks(trade_date=None):
     """通过东方财富 push2ex API 获取涨停数据"""
     if trade_date is None:
@@ -127,15 +326,19 @@ def generate_pdf(stocks, trade_date, market_comment=None):
         json.dump(stocks, f, ensure_ascii=False)
 
     # 调用 Node.js 生成 PDF
+    reports_dir = os.path.join(ROOT_DIR, "reports", trade_date[:4])
+    os.makedirs(reports_dir, exist_ok=True)
+    output_rel = os.path.join("reports", trade_date[:4], f"涨停复盘_{trade_date}.pdf")
+
     cmd = [
-        "node", os.path.join(os.path.dirname(os.path.abspath(__file__)), "generate_pdf.js"),
+        "node", os.path.join(ROOT_DIR, "generate_pdf.js"),
         tmp_json, trade_date,
-        f"涨停复盘_{trade_date}.pdf",
+        output_rel,
         market_comment or ""
     ]
 
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120, cwd=ROOT_DIR)
         if result.returncode == 0 and result.stdout.strip().startswith("OK:"):
             output_file = result.stdout.strip().split(":", 1)[1].strip()
             print(f"✅ PDF 生成成功: {output_file}")
@@ -164,21 +367,21 @@ def commit_to_github(filepath):
         print("📤 正在提交到 GitHub...")
         remote_url = f"https://x-access-token:{token}@github.com/{repo}.git"
 
-        subprocess.run(["git", "remote", "set-url", "origin", remote_url], check=True, capture_output=True)
-        subprocess.run(["git", "config", "user.name", "GitHub Actions"], check=True, capture_output=True)
-        subprocess.run(["git", "config", "user.email", "actions@github.com"], check=True, capture_output=True)
-        subprocess.run(["git", "fetch", "origin"], check=True, capture_output=True)
-        subprocess.run(["git", "stash"], check=True, capture_output=True)
-        subprocess.run(["git", "pull", "--rebase", "origin", "main"], check=True, capture_output=True)
+        subprocess.run(["git", "remote", "set-url", "origin", remote_url], check=True, capture_output=True, cwd=ROOT_DIR)
+        subprocess.run(["git", "config", "user.name", "GitHub Actions"], check=True, capture_output=True, cwd=ROOT_DIR)
+        subprocess.run(["git", "config", "user.email", "actions@github.com"], check=True, capture_output=True, cwd=ROOT_DIR)
+        subprocess.run(["git", "fetch", "origin"], check=True, capture_output=True, cwd=ROOT_DIR)
+        subprocess.run(["git", "stash"], check=True, capture_output=True, cwd=ROOT_DIR)
+        subprocess.run(["git", "pull", "--rebase", "origin", "main"], check=True, capture_output=True, cwd=ROOT_DIR)
         # stash pop 只有在 stash 成功时才执行
-        result = subprocess.run(["git", "stash", "pop"], capture_output=True, text=True)
+        result = subprocess.run(["git", "stash", "pop"], capture_output=True, text=True, cwd=ROOT_DIR)
         # 忽略 "No stash entries found" 这类非致命错误
-        subprocess.run(["git", "add", "-f", filepath], check=True, capture_output=True)
+        subprocess.run(["git", "add", "-f", filepath], check=True, capture_output=True, cwd=ROOT_DIR)
         subprocess.run([
             "git", "commit", "-m",
             f"📈 涨停复盘 {datetime.now().strftime('%Y-%m-%d')}"
-        ], check=True, capture_output=True)
-        subprocess.run(["git", "push", "origin", "main"], check=True, capture_output=True)
+        ], check=True, capture_output=True, cwd=ROOT_DIR)
+        subprocess.run(["git", "push", "origin", "main"], check=True, capture_output=True, cwd=ROOT_DIR)
 
         # 返回 docx 的 raw GitHub 链接
         report_url = f"https://github.com/Kidd-Ye/Daily_stock_report/raw/main/{filepath}"
@@ -195,14 +398,102 @@ def commit_to_github(filepath):
 
 
 # =============================================
-# 4. 发送飞书卡片
+# 4. 发送飞书消息（应用身份）
 # =============================================
-def send_feishu_card(url, stocks, trade_date):
-    """发送飞书卡片"""
-    webhook = os.getenv("FEISHU_WEBHOOK")
-    if not webhook:
-        print("❌ 未配置 FEISHU_WEBHOOK")
+def get_tenant_access_token(app_id, app_secret):
+    url = "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal"
+    payload = {"app_id": app_id, "app_secret": app_secret}
+    try:
+        resp = requests.post(url, json=payload, timeout=10)
+        resp.raise_for_status()
+        data = resp.json()
+        if data.get("code") == 0 and data.get("tenant_access_token"):
+            return data["tenant_access_token"]
+        print(f"❌ 获取 tenant_access_token 失败: {data}")
+    except Exception as e:
+        print(f"❌ tenant_access_token 请求异常: {e}")
+    return None
+
+
+def upload_file_to_feishu(token, file_path):
+    url = "https://open.feishu.cn/open-apis/im/v1/files"
+    ext = os.path.splitext(file_path)[1].lstrip(".").lower() or "pdf"
+    file_type = ext if ext in ("pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx") else "pdf"
+    try:
+        with open(file_path, "rb") as f:
+            files = {"file": (os.path.basename(file_path), f)}
+            data = {"file_type": file_type}
+            headers = {"Authorization": f"Bearer {token}"}
+            resp = requests.post(url, headers=headers, files=files, data=data, timeout=30)
+            resp.raise_for_status()
+            res = resp.json()
+            if res.get("code") == 0 and res.get("data", {}).get("file_key"):
+                return res["data"]["file_key"]
+            print(f"❌ 上传文件失败: {res}")
+    except Exception as e:
+        print(f"❌ 上传文件异常: {e}")
+    return None
+
+
+def send_feishu_message(token, receive_id, msg_type, content, receive_id_type="chat_id"):
+    url = f"https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type={receive_id_type}"
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json; charset=utf-8"}
+    payload = {
+        "receive_id": receive_id,
+        "msg_type": msg_type,
+        "content": json.dumps(content, ensure_ascii=False)
+    }
+    try:
+        resp = requests.post(url, headers=headers, json=payload, timeout=10)
+        resp.raise_for_status()
+        data = resp.json()
+        if data.get("code") == 0:
+            return True
+        print(f"❌ 飞书发送失败: {data}")
+    except Exception as e:
+        print(f"❌ 飞书请求异常: {e}")
+    return False
+
+
+def send_feishu_report(file_path, stocks, trade_date, backup_url=None):
+    """上传文件到飞书并发送消息"""
+    app_id = os.getenv("FEISHU_APP_ID")
+    app_secret = os.getenv("FEISHU_APP_SECRET")
+    receive_id = os.getenv("FEISHU_RECEIVE_ID") or os.getenv("FEISHU_CHAT_ID")
+    receive_id_type = os.getenv("FEISHU_RECEIVE_ID_TYPE", "chat_id")
+
+    if not app_id or not app_secret or not receive_id:
+        print("❌ 未配置 FEISHU_APP_ID / FEISHU_APP_SECRET / FEISHU_RECEIVE_ID")
         return
+
+    token = get_tenant_access_token(app_id, app_secret)
+    if not token:
+        return
+
+    file_key = upload_file_to_feishu(token, file_path)
+    if not file_key:
+        return
+
+    # 先发送文件
+    ok = send_feishu_message(token, receive_id, "file", {"file_key": file_key}, receive_id_type)
+    if not ok:
+        return
+
+    # 再发送简要数据
+    date_str = datetime.strptime(trade_date, "%Y%m%d").strftime("%Y年%m月%d日")
+    total = len(stocks)
+    board20_count = len([s for s in stocks if s.get("is_20cm", False)])
+    board_more = len([s for s in stocks if s.get("bd", 1) >= 2])
+    top5 = sorted(stocks, key=lambda x: x.get("amount", 0), reverse=True)[:5]
+    top5_text = "、".join([f"{s['name']}({s['code']})" for s in top5]) if top5 else "—"
+    text = (
+        f"A股涨停复盘 {date_str}\n"
+        f"涨停总数：{total} 家 | 连板：{board_more} 家 | 20CM：{board20_count} 只\n"
+        f"成交额前五：{top5_text}"
+    )
+    if backup_url:
+        text += f"\n备用链接：{backup_url}"
+    send_feishu_message(token, receive_id, "text", {"text": text}, receive_id_type)
 
     date_str = datetime.strptime(trade_date, "%Y%m%d").strftime("%Y年%m月%d日")
     total = len(stocks)
@@ -270,18 +561,12 @@ if __name__ == "__main__":
     print("=" * 50)
 
     # 计算交易日期（取前一交易日）
-    today = datetime.now()
-    if today.weekday() == 0:  # 周一
-        trade_date = (today - timedelta(days=3)).strftime("%Y%m%d")
-    elif today.weekday() in (5, 6):  # 周六、周日
-        trade_date = (today - timedelta(days=today.weekday() - 4)).strftime("%Y%m%d")
-    else:
-        trade_date = (today - timedelta(days=1)).strftime("%Y%m%d")
-
+    trade_date = get_trade_date()
     print(f"📅 交易日期: {trade_date}")
 
     # 1. 获取涨停数据
     stocks = get_limit_up_stocks(trade_date)
+    stocks = dedupe_stocks(stocks)
 
     if not stocks:
         print("❌ 未获取到涨停数据，程序退出")
@@ -299,8 +584,9 @@ if __name__ == "__main__":
     if not url:
         url = f"https://github.com/Kidd-Ye/Daily_stock_report/raw/main/{pdf_file}"
 
-    # 4. 发送飞书卡片
-    send_feishu_card(url, stocks, trade_date)
+    # 4. 发送飞书消息（文件）
+    abs_pdf = pdf_file if os.path.isabs(pdf_file) else os.path.join(ROOT_DIR, pdf_file)
+    send_feishu_report(abs_pdf, stocks, trade_date, backup_url=url)
 
     print("=" * 50)
     print(f"✅ 完成！链接: {url}")

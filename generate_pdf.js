@@ -7,6 +7,7 @@
 const chromium = require('@sparticuz/chromium');
 const puppeteer = require('puppeteer-core');
 const fs = require('fs');
+const path = require('path');
 
 // ========== 样式常量 ==========
 const RED = '#C0392B';
@@ -316,6 +317,10 @@ if (require.main === module) {
   const html = buildHtml(stocks, tradeDate, marketComment);
 
   (async () => {
+    const outDir = path.dirname(outputFile);
+    if (outDir && outDir !== '.') {
+      fs.mkdirSync(outDir, { recursive: true });
+    }
     const browser = await puppeteer.launch({
       args: chromium.args,
       defaultViewport: chromium.defaultViewport,
