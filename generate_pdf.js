@@ -38,13 +38,13 @@ function formatTime(t) {
 function makeTable(headers, rows, colWidths) {
   const total = colWidths.reduce((a, b) => a + b, 0);
   const ths = headers.map((h, i) =>
-    `<th style="width:${colWidths[i]}px;background:${LIGHT_RED_BG};color:${RED};font-weight:bold;font-size:10pt;text-align:center;padding:6px 8px;border:1px solid ${BORDER_COLOR};font-family:微软雅黑,Microsoft YaHei,sans-serif;">${escapeHtml(h)}</th>`
+    `<th style="width:${colWidths[i]}px;background:${LIGHT_RED_BG};color:${RED};font-weight:bold;font-size:10pt;text-align:center;padding:6px 8px;border:1px solid ${BORDER_COLOR};font-family:'Noto Sans CJK SC','Microsoft YaHei','PingFang SC',sans-serif;">${escapeHtml(h)}</th>`
   ).join('');
 
   const trs = rows.map((row, ri) => {
     const bg = ri % 2 === 0 ? '#FFFFFF' : LIGHT_GRAY_BG;
     const tds = row.map((text, ci) =>
-      `<td style="width:${colWidths[ci]}px;background:${bg};color:${DARK};font-size:10pt;text-align:center;padding:6px 8px;border:1px solid ${BORDER_COLOR};font-family:微软雅黑,Microsoft YaHei,sans-serif;">${escapeHtml(text ?? '—')}</td>`
+      `<td style="width:${colWidths[ci]}px;background:${bg};color:${DARK};font-size:10pt;text-align:center;padding:6px 8px;border:1px solid ${BORDER_COLOR};font-family:'Noto Sans CJK SC','Microsoft YaHei','PingFang SC',sans-serif;">${escapeHtml(text ?? '—')}</td>`
     ).join('');
     return `<tr>${tds}</tr>`;
   }).join('');
@@ -143,17 +143,17 @@ function buildHtml(stocks, tradeDate, marketComment) {
       content: "第 " counter(page) " 页  |  免责声明：本报告仅供参考，不构成投资建议";
       font-size: 8pt;
       color: ${GRAY};
-      font-family: 微软雅黑, Microsoft YaHei, sans-serif;
+      font-family: 'Noto Sans CJK SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;
     }
     @top-right {
       content: "A股涨停复盘  |  数据来源：东方财富";
       font-size: 8pt;
       color: ${GRAY};
-      font-family: 微软雅黑, Microsoft YaHei, sans-serif;
+      font-family: 'Noto Sans CJK SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;
     }
   }
   body {
-    font-family: 微软雅黑, 'Microsoft YaHei', 'PingFang SC', sans-serif;
+    font-family: 'Noto Sans CJK SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;
     font-size: 10pt;
     color: ${DARK};
     margin: 0;
