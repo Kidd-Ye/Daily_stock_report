@@ -367,12 +367,10 @@ def commit_to_github(filepath):
         print("📤 正在提交到 GitHub...")
         remote_url = f"https://x-access-token:{token}@github.com/{repo}.git"
 
-        subprocess.run(["git", "remote", "set-url", "origin", remote_url], check=True, capture_output=True, cwd=ROOT_DIR)
         subprocess.run(["git", "config", "user.name", "GitHub Actions"], check=True, capture_output=True, cwd=ROOT_DIR)
         subprocess.run(["git", "config", "user.email", "actions@github.com"], check=True, capture_output=True, cwd=ROOT_DIR)
-        subprocess.run(["git", "fetch", "origin"], check=True, capture_output=True, cwd=ROOT_DIR)
         subprocess.run(["git", "stash"], check=True, capture_output=True, cwd=ROOT_DIR)
-        subprocess.run(["git", "pull", "--rebase", "origin", "main"], check=True, capture_output=True, cwd=ROOT_DIR)
+        subprocess.run(["git", "pull", "--rebase", remote_url, "main"], check=True, capture_output=True, cwd=ROOT_DIR)
         # stash pop 只有在 stash 成功时才执行
         result = subprocess.run(["git", "stash", "pop"], capture_output=True, text=True, cwd=ROOT_DIR)
         # 忽略 "No stash entries found" 这类非致命错误
@@ -381,7 +379,7 @@ def commit_to_github(filepath):
             "git", "commit", "-m",
             f"📈 涨停复盘 {datetime.now().strftime('%Y-%m-%d')}"
         ], check=True, capture_output=True, cwd=ROOT_DIR)
-        subprocess.run(["git", "push", "origin", "main"], check=True, capture_output=True, cwd=ROOT_DIR)
+        subprocess.run(["git", "push", remote_url, "main"], check=True, capture_output=True, cwd=ROOT_DIR)
 
         # 返回 docx 的 raw GitHub 链接
         report_url = f"https://github.com/Kidd-Ye/Daily_stock_report/raw/main/{filepath}"

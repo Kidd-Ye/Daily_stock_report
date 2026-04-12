@@ -11,6 +11,7 @@ __pycache__/
 *.tmp
 stocks.json
 trading_calendar.json
+.workbuddy/
 
 # macOS
 .DS_Store
