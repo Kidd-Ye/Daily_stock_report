@@ -40,11 +40,19 @@ def _extract_stocks_from_mx(result: Dict[str, Any]) -> List[Dict[str, Any]]:
         return []
 
     data = result.get("data", {})
+    # DEBUG: 打印返回结构的关键路径
+    print(f"🔍 [DEBUG] result keys: {list(result.keys())}")
+    print(f"🔍 [DEBUG] data keys: {list(data.keys()) if isinstance(data, dict) else type(data)}")
     inner_data = data.get("data", {})
+    print(f"🔍 [DEBUG] inner_data keys: {list(inner_data.keys()) if isinstance(inner_data, dict) else type(inner_data)}")
     search_result = inner_data.get("searchDataResultDTO", {})
+    print(f"🔍 [DEBUG] searchDataResultDTO keys: {list(search_result.keys()) if isinstance(search_result, dict) else type(search_result)}")
     dto_list = search_result.get("dataTableDTOList", [])
+    print(f"🔍 [DEBUG] dto_list count: {len(dto_list)}")
 
     if not dto_list:
+        # 打印完整的 search_result 帮助排查
+        print(f"🔍 [DEBUG] full search_result: {json.dumps(search_result, ensure_ascii=False)[:2000]}")
         print("⚠️ 妙想 API 返回数据为空")
         return []
 
