@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 A股涨停复盘自动推送
-生成 Word 文档（.docx），匹配模板格式
+生成 PDF 文档，匹配模板格式
 """
 
 import requests
@@ -115,36 +115,36 @@ def _get_limit_up_from_clist():
 
 
 # =============================================
-# 2. 生成 Word 文档（调用 Node.js）
+# 2. 生成 PDF 文档（调用 Node.js + @sparticuz/chromium）
 # =============================================
-def generate_docx(stocks, trade_date, market_comment=None):
-    """调用 generate_docx.js 生成 .docx 文件"""
-    print("📝 正在生成 Word 文档...")
+def generate_pdf(stocks, trade_date, market_comment=None):
+    """调用 generate_pdf.js 生成 .pdf 文件"""
+    print("📝 正在生成 PDF 文档...")
 
     # 把股票数据写入临时 JSON 文件
-    tmp_json = "/tmp/stocks_for_docx.json"
+    tmp_json = "/tmp/stocks_for_pdf.json"
     with open(tmp_json, "w", encoding="utf-8") as f:
         json.dump(stocks, f, ensure_ascii=False)
 
-    # 调用 Node.js 生成 docx
+    # 调用 Node.js 生成 PDF
     cmd = [
-        "node", os.path.join(os.path.dirname(os.path.abspath(__file__)), "generate_docx.js"),
+        "node", os.path.join(os.path.dirname(os.path.abspath(__file__)), "generate_pdf.js"),
         tmp_json, trade_date,
-        f"涨停复盘_{trade_date}.docx",
+        f"涨停复盘_{trade_date}.pdf",
         market_comment or ""
     ]
 
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
         if result.returncode == 0 and result.stdout.strip().startswith("OK:"):
             output_file = result.stdout.strip().split(":", 1)[1].strip()
-            print(f"✅ Word 文档生成成功: {output_file}")
+            print(f"✅ PDF 生成成功: {output_file}")
             return output_file
         else:
-            print(f"❌ docx 生成失败: {result.stderr or result.stdout}")
+            print(f"❌ PDF 生成失败: {result.stderr or result.stdout}")
             return None
     except Exception as e:
-        print(f"❌ docx 生成异常: {e}")
+        print(f"❌ PDF 生成异常: {e}")
         return None
 
 
@@ -242,7 +242,7 @@ def send_feishu_card(url, stocks, trade_date):
                     "tag": "action",
                     "actions": [{
                         "tag": "button",
-                        "text": {"tag": "plain_text", "content": "📄 下载复盘 Word 文档"},
+                        "text": {"tag": "plain_text", "content": "📄 下载复盘 PDF 文档"},
                         "type": "primary",
                         "url": url
                     }]
@@ -287,17 +287,17 @@ if __name__ == "__main__":
         print("❌ 未获取到涨停数据，程序退出")
         exit(1)
 
-    # 2. 生成 Word 文档
-    docx_file = generate_docx(stocks, trade_date)
+    # 2. 生成 PDF 文档
+    pdf_file = generate_pdf(stocks, trade_date)
 
-    if not docx_file:
-        print("❌ Word 文档生成失败，程序退出")
+    if not pdf_file:
+        print("❌ PDF 文档生成失败，程序退出")
         exit(1)
 
     # 3. 提交到 GitHub
-    url = commit_to_github(docx_file)
+    url = commit_to_github(pdf_file)
     if not url:
-        url = f"https://github.com/Kidd-Ye/Daily_stock_report/raw/main/{docx_file}"
+        url = f"https://github.com/Kidd-Ye/Daily_stock_report/raw/main/{pdf_file}"
 
     # 4. 发送飞书卡片
     send_feishu_card(url, stocks, trade_date)

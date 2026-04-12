@@ -8,7 +8,7 @@ jobs:
   run:
     runs-on: ubuntu-latest
     permissions:
-      contents: write          # 允许写入仓库（提交 docx）
+      contents: write          # 允许写入仓库（提交 pdf）
 
     steps:
       - name: 检出代码
@@ -29,7 +29,7 @@ jobs:
           pip install requests
           npm install
 
-      - name: 运行程序（抓取数据 + 生成 Word + 推送）
+      - name: 运行程序（抓取数据 + 生成 PDF + 推送）
         env:
           FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

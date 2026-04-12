@@ -13,3 +13,9 @@ stocks.json
 
 # macOS
 .DS_Store
+
+# 不提交生成的报告文件（由 GitHub Actions 自动生成）
+*.html
+reports/
+涨停复盘_*.pdf
+涨停复盘_*.docx
