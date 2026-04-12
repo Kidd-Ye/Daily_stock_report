@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>A股涨停复盘 2026-04-12</title>
+<title>A股涨停复盘 20260410</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f6fa; color: #2d3436; }
   .header { background: linear-gradient(135deg, #c0392b, #e74c3c); color: white; padding: 24px 20px 20px; }
-  .header h1 { font-size: 20px; font-weight: 700; }
+  .header h1 { font-size: 22px; font-weight: 700; }
   .header .sub { font-size: 13px; opacity: 0.85; margin-top: 4px; }
   .stats { display: flex; gap: 12px; padding: 16px; overflow-x: auto; }
   .stat-card { background: white; border-radius: 12px; padding: 16px 20px; min-width: 100px; flex: 1; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
@@ -16,272 +16,473 @@
   .stat-card .label { font-size: 12px; color: #636e72; margin-top: 4px; }
   .section { background: white; margin: 0 16px 16px; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
   .section-title { padding: 14px 16px; font-weight: 700; font-size: 15px; border-bottom: 1px solid #f0f0f0; background: #fafafa; }
-  .strong-box { padding: 14px 16px; font-size: 15px; color: #c0392b; font-weight: 600; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th { background: #fff5f5; color: #636e72; font-weight: 600; padding: 10px 12px; text-align: left; border-bottom: 2px solid #fee; }
   td { padding: 10px 12px; border-bottom: 1px solid #f9f9f9; vertical-align: middle; }
   tr:last-child td { border-bottom: none; }
-  .red { color: #c0392b; font-weight: 700; }
-  .code { color: #636e72; font-size: 12px; }
-  .badge { background: #fff0f0; color: #c0392b; border: 1px solid #fcc; border-radius: 4px; font-size: 11px; padding: 1px 5px; margin-left: 6px; font-weight: 600; }
+  .badge { background: #fff0f0; color: #c0392b; border: 1px solid #fcc; border-radius: 4px; font-size: 11px; padding: 1px 5px; margin-left: 4px; font-weight: 600; }
+  .badge.board { background: #fff3e0; color: #e65100; border-color: #ffcc80; }
+  .badge.cm { background: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; }
   .footer { text-align: center; color: #b2bec3; font-size: 12px; padding: 20px; }
+  .cm-tag { color: #2e7d32; font-weight: 600; }
+  .zbc { color: #e67e22; font-weight: 600; margin-left: 4px; }
 </style>
 </head>
 <body>
 
 <div class="header">
   <h1>📈 A股涨停复盘</h1>
-  <div class="sub">2026-04-12 &nbsp;·&nbsp; 更新于 2026-04-12 02:38 &nbsp;·&nbsp; 数据来源：东方财富</div>
+  <div class="sub">2026年04月10日 &nbsp;·&nbsp; 更新于 2026-04-12 03:32 &nbsp;·&nbsp; 数据来源：东方财富</div>
 </div>
 
 <div class="stats">
   <div class="stat-card">
-    <div class="num">30</div>
+    <div class="num">59</div>
     <div class="label">涨停总数</div>
   </div>
   <div class="stat-card">
-    <div class="num">5</div>
+    <div class="num">3</div>
+    <div class="label">20CM个股</div>
+  </div>
+  <div class="stat-card">
+    <div class="num">17</div>
     <div class="label">连板个股</div>
   </div>
   <div class="stat-card">
-    <div class="num">3</div>
+    <div class="num">4</div>
     <div class="label">最高连板</div>
   </div>
 </div>
 
 <div class="section">
-  <div class="section-title">⭐ 强势股</div>
-  <div class="strong-box">N三瑞　N有研　纳微科技</div>
-</div>
-
-<div class="section">
-  <div class="section-title">🔥 今日涨停一览</div>
+  <div class="section-title">📋 涨停股票全名单（59只）</div>
   <table>
     <thead>
-      <tr>
-        <th>#</th>
-        <th>名称</th>
-        <th>代码</th>
-        <th>涨幅</th>
-        <th>题材</th>
-      </tr>
+      <tr><th>#</th><th>名称</th><th>代码</th><th>涨停时间</th><th>涨停原因</th></tr>
     </thead>
     <tbody>
+      
         <tr>
             <td>1</td>
-            <td><strong>N三瑞</strong><span class="badge">3连板</span></td>
-            <td class="code">301696</td>
-            <td class="red">+272.77%</td>
-            <td>题材</td>
+            <td><strong>华远控股</strong> <span class='badge board'>4板</span><span class='zbc'>1炸</span></td>
+            <td class='code'>600743</td>
+            <td>09:30:33</td>
+            <td>一般零售</td>
         </tr>
         <tr>
             <td>2</td>
-            <td><strong>N有研</strong><span class="badge">3连板</span></td>
-            <td class="code">688811</td>
-            <td class="red">+167.08%</td>
-            <td>题材</td>
+            <td><strong>中嘉博创</strong> <span class='badge board'>3板</span><span class='zbc'>3炸</span></td>
+            <td class='code'>000889</td>
+            <td>09:25:00</td>
+            <td>通信服务</td>
         </tr>
         <tr>
             <td>3</td>
-            <td><strong>纳微科技</strong><span class="badge">3连板</span></td>
-            <td class="code">688690</td>
-            <td class="red">+20.02%</td>
-            <td>题材</td>
+            <td><strong>长源东谷</strong> <span class='badge board'>3板</span></td>
+            <td class='code'>603950</td>
+            <td>09:25:03</td>
+            <td>汽车零部</td>
         </tr>
         <tr>
             <td>4</td>
-            <td><strong>晶升股份</strong><span class="badge">3连板</span></td>
-            <td class="code">688478</td>
-            <td class="red">+20.00%</td>
-            <td>题材</td>
+            <td><strong>来伊份</strong> <span class='badge board'>3板</span><span class='zbc'>3炸</span></td>
+            <td class='code'>603777</td>
+            <td>09:32:00</td>
+            <td>休闲食品</td>
         </tr>
         <tr>
             <td>5</td>
-            <td><strong>英唐智控</strong><span class="badge">3连板</span></td>
-            <td class="code">300131</td>
-            <td class="red">+20.00%</td>
-            <td>题材</td>
+            <td><strong>联翔股份</strong> <span class='badge board'>3板</span></td>
+            <td class='code'>603272</td>
+            <td>09:44:03</td>
+            <td>家居用品</td>
         </tr>
         <tr>
             <td>6</td>
-            <td><strong>奥尼电子</strong></td>
-            <td class="code">301189</td>
-            <td class="red">+14.82%</td>
-            <td>题材</td>
+            <td><strong>万泽股份</strong> <span class='badge board'>3板</span></td>
+            <td class='code'>000534</td>
+            <td>09:44:57</td>
+            <td>生物制品</td>
         </tr>
         <tr>
             <td>7</td>
-            <td><strong>欣旺达</strong></td>
-            <td class="code">300207</td>
-            <td class="red">+14.70%</td>
-            <td>题材</td>
+            <td><strong>联德股份</strong> <span class='badge board'>3板</span></td>
+            <td class='code'>605060</td>
+            <td>10:06:37</td>
+            <td>通用设备</td>
         </tr>
         <tr>
             <td>8</td>
-            <td><strong>四方精创</strong></td>
-            <td class="code">300468</td>
-            <td class="red">+12.36%</td>
-            <td>题材</td>
+            <td><strong>永鼎股份</strong> <span class='badge board'>3板</span><span class='zbc'>4炸</span></td>
+            <td class='code'>600105</td>
+            <td>13:03:47</td>
+            <td>通信设备</td>
         </tr>
         <tr>
             <td>9</td>
-            <td><strong>杰美特</strong></td>
-            <td class="code">300868</td>
-            <td class="red">+12.12%</td>
-            <td>题材</td>
+            <td><strong>中恒电气</strong> <span class='badge board'>2板</span></td>
+            <td class='code'>002364</td>
+            <td>09:25:00</td>
+            <td>其他电源</td>
         </tr>
         <tr>
             <td>10</td>
-            <td><strong>张小泉</strong></td>
-            <td class="code">301055</td>
-            <td class="red">+11.94%</td>
-            <td>题材</td>
+            <td><strong>睿能科技</strong> <span class='badge board'>2板</span><span class='zbc'>1炸</span></td>
+            <td class='code'>603933</td>
+            <td>09:25:03</td>
+            <td>其他电子</td>
         </tr>
         <tr>
             <td>11</td>
-            <td><strong>联动科技</strong></td>
-            <td class="code">301369</td>
-            <td class="red">+11.88%</td>
-            <td>题材</td>
+            <td><strong>和胜股份</strong> <span class='badge board'>2板</span><span class='zbc'>3炸</span></td>
+            <td class='code'>002824</td>
+            <td>09:30:09</td>
+            <td>工业金属</td>
         </tr>
         <tr>
             <td>12</td>
-            <td><strong>宏源药业</strong></td>
-            <td class="code">301246</td>
-            <td class="red">+11.86%</td>
-            <td>题材</td>
+            <td><strong>彩虹股份</strong> <span class='badge board'>2板</span><span class='zbc'>1炸</span></td>
+            <td class='code'>600707</td>
+            <td>09:30:14</td>
+            <td>光学光电</td>
         </tr>
         <tr>
             <td>13</td>
-            <td><strong>安克创新</strong></td>
-            <td class="code">300866</td>
-            <td class="red">+11.38%</td>
-            <td>题材</td>
+            <td><strong>长江通信</strong> <span class='badge board'>2板</span><span class='zbc'>5炸</span></td>
+            <td class='code'>600345</td>
+            <td>09:30:46</td>
+            <td>通信设备</td>
         </tr>
         <tr>
             <td>14</td>
-            <td><strong>信宇人</strong></td>
-            <td class="code">688573</td>
-            <td class="red">+10.77%</td>
-            <td>题材</td>
+            <td><strong>新朋股份</strong> <span class='badge board'>2板</span><span class='zbc'>2炸</span></td>
+            <td class='code'>002328</td>
+            <td>09:31:12</td>
+            <td>汽车零部</td>
         </tr>
         <tr>
             <td>15</td>
-            <td><strong>蒙草生态</strong></td>
-            <td class="code">300355</td>
-            <td class="red">+10.68%</td>
-            <td>题材</td>
+            <td><strong>五方光电</strong> <span class='badge board'>2板</span></td>
+            <td class='code'>002962</td>
+            <td>09:36:51</td>
+            <td>光学光电</td>
         </tr>
         <tr>
             <td>16</td>
-            <td><strong>药康生物</strong></td>
-            <td class="code">688046</td>
-            <td class="red">+10.55%</td>
-            <td>题材</td>
+            <td><strong>沃格光电</strong> <span class='badge board'>2板</span><span class='zbc'>3炸</span></td>
+            <td class='code'>603773</td>
+            <td>10:05:48</td>
+            <td>光学光电</td>
         </tr>
         <tr>
             <td>17</td>
-            <td><strong>世纪鼎利</strong></td>
-            <td class="code">300050</td>
-            <td class="red">+10.39%</td>
-            <td>题材</td>
+            <td><strong>圣阳股份</strong> <span class='badge board'>2板</span><span class='zbc'>9炸</span></td>
+            <td class='code'>002580</td>
+            <td>10:14:30</td>
+            <td>电池</td>
         </tr>
         <tr>
             <td>18</td>
-            <td><strong>纳百川</strong></td>
-            <td class="code">301667</td>
-            <td class="red">+10.39%</td>
-            <td>题材</td>
+            <td><strong>远大控股</strong> </td>
+            <td class='code'>000626</td>
+            <td>09:25:00</td>
+            <td>物流</td>
         </tr>
         <tr>
             <td>19</td>
-            <td><strong>光智科技</strong></td>
-            <td class="code">300489</td>
-            <td class="red">+10.37%</td>
-            <td>题材</td>
+            <td><strong>欧晶科技</strong> <span class='zbc'>1炸</span></td>
+            <td class='code'>001269</td>
+            <td>09:25:00</td>
+            <td>光伏设备</td>
         </tr>
         <tr>
             <td>20</td>
-            <td><strong>陕西华达</strong></td>
-            <td class="code">301517</td>
-            <td class="red">+10.24%</td>
-            <td>题材</td>
+            <td><strong>青山纸业</strong> </td>
+            <td class='code'>600103</td>
+            <td>09:25:00</td>
+            <td>造纸</td>
         </tr>
         <tr>
             <td>21</td>
-            <td><strong>全志科技</strong></td>
-            <td class="code">300458</td>
-            <td class="red">+10.21%</td>
-            <td>题材</td>
+            <td><strong>中国动力</strong> </td>
+            <td class='code'>600482</td>
+            <td>09:30:44</td>
+            <td>其他电源</td>
         </tr>
         <tr>
             <td>22</td>
-            <td><strong>天华新能</strong></td>
-            <td class="code">300390</td>
-            <td class="red">+10.16%</td>
-            <td>题材</td>
+            <td><strong>惠而浦</strong> </td>
+            <td class='code'>600983</td>
+            <td>09:30:48</td>
+            <td>白色家电</td>
         </tr>
         <tr>
             <td>23</td>
-            <td><strong>青山纸业</strong></td>
-            <td class="code">600103</td>
-            <td class="red">+10.14%</td>
-            <td>题材</td>
+            <td><strong>金 融 街</strong> <span class='zbc'>1炸</span></td>
+            <td class='code'>000402</td>
+            <td>09:31:06</td>
+            <td>房地产开</td>
         </tr>
         <tr>
             <td>24</td>
-            <td><strong>中嘉博创</strong></td>
-            <td class="code">000889</td>
-            <td class="red">+10.13%</td>
-            <td>题材</td>
+            <td><strong>德业股份</strong> <span class='zbc'>2炸</span></td>
+            <td class='code'>605117</td>
+            <td>09:31:22</td>
+            <td>光伏设备</td>
         </tr>
         <tr>
             <td>25</td>
-            <td><strong>大东南</strong></td>
-            <td class="code">002263</td>
-            <td class="red">+10.11%</td>
-            <td>题材</td>
+            <td><strong>盈方微</strong> <span class='zbc'>2炸</span></td>
+            <td class='code'>000670</td>
+            <td>09:31:33</td>
+            <td>其他电子</td>
         </tr>
         <tr>
             <td>26</td>
-            <td><strong>新澳股份</strong></td>
-            <td class="code">603889</td>
-            <td class="red">+10.06%</td>
-            <td>题材</td>
+            <td><strong>新澳股份</strong> <span class='zbc'>3炸</span></td>
+            <td class='code'>603889</td>
+            <td>09:31:36</td>
+            <td>纺织制造</td>
         </tr>
         <tr>
             <td>27</td>
-            <td><strong>康盛股份</strong></td>
-            <td class="code">002418</td>
-            <td class="red">+10.06%</td>
-            <td>题材</td>
+            <td><strong>纳微科技</strong> <span class='badge cm'>20CM</span><span class='zbc'>2炸</span></td>
+            <td class='code'>688690</td>
+            <td>09:35:22</td>
+            <td>化学制药</td>
         </tr>
         <tr>
             <td>28</td>
-            <td><strong>惠而浦</strong></td>
-            <td class="code">600983</td>
-            <td class="red">+10.05%</td>
-            <td>题材</td>
+            <td><strong>国轩高科</strong> <span class='zbc'>5炸</span></td>
+            <td class='code'>002074</td>
+            <td>09:36:36</td>
+            <td>电池</td>
         </tr>
         <tr>
             <td>29</td>
-            <td><strong>彩虹股份</strong></td>
-            <td class="code">600707</td>
-            <td class="red">+10.03%</td>
-            <td>题材</td>
+            <td><strong>康盛股份</strong> <span class='zbc'>1炸</span></td>
+            <td class='code'>002418</td>
+            <td>09:36:48</td>
+            <td>家电零部</td>
         </tr>
         <tr>
             <td>30</td>
-            <td><strong>圣阳股份</strong></td>
-            <td class="code">002580</td>
-            <td class="red">+10.03%</td>
-            <td>题材</td>
+            <td><strong>奥美医疗</strong> <span class='zbc'>1炸</span></td>
+            <td class='code'>002950</td>
+            <td>09:37:09</td>
+            <td>医疗器械</td>
+        </tr>
+        <tr>
+            <td>31</td>
+            <td><strong>大东南</strong> <span class='zbc'>2炸</span></td>
+            <td class='code'>002263</td>
+            <td>09:37:54</td>
+            <td>塑料</td>
+        </tr>
+        <tr>
+            <td>32</td>
+            <td><strong>华源控股</strong> <span class='zbc'>5炸</span></td>
+            <td class='code'>002787</td>
+            <td>09:39:00</td>
+            <td>包装印刷</td>
+        </tr>
+        <tr>
+            <td>33</td>
+            <td><strong>石大胜华</strong> <span class='zbc'>1炸</span></td>
+            <td class='code'>603026</td>
+            <td>09:40:57</td>
+            <td>电池</td>
+        </tr>
+        <tr>
+            <td>34</td>
+            <td><strong>南华期货</strong> </td>
+            <td class='code'>603093</td>
+            <td>09:46:30</td>
+            <td>多元金融</td>
+        </tr>
+        <tr>
+            <td>35</td>
+            <td><strong>山东玻纤</strong> <span class='zbc'>2炸</span></td>
+            <td class='code'>605006</td>
+            <td>09:47:07</td>
+            <td>玻璃玻纤</td>
+        </tr>
+        <tr>
+            <td>36</td>
+            <td><strong>宁波精达</strong> <span class='zbc'>1炸</span></td>
+            <td class='code'>603088</td>
+            <td>09:47:23</td>
+            <td>通用设备</td>
+        </tr>
+        <tr>
+            <td>37</td>
+            <td><strong>凯盛新能</strong> </td>
+            <td class='code'>600876</td>
+            <td>09:51:06</td>
+            <td>玻璃玻纤</td>
+        </tr>
+        <tr>
+            <td>38</td>
+            <td><strong>泰坦股份</strong> </td>
+            <td class='code'>003036</td>
+            <td>09:56:51</td>
+            <td>专用设备</td>
+        </tr>
+        <tr>
+            <td>39</td>
+            <td><strong>上海洗霸</strong> </td>
+            <td class='code'>603200</td>
+            <td>10:02:46</td>
+            <td>环境治理</td>
+        </tr>
+        <tr>
+            <td>40</td>
+            <td><strong>西藏矿业</strong> <span class='zbc'>8炸</span></td>
+            <td class='code'>000762</td>
+            <td>10:09:03</td>
+            <td>能源金属</td>
+        </tr>
+        <tr>
+            <td>41</td>
+            <td><strong>文峰股份</strong> <span class='zbc'>1炸</span></td>
+            <td class='code'>601010</td>
+            <td>10:25:04</td>
+            <td>一般零售</td>
+        </tr>
+        <tr>
+            <td>42</td>
+            <td><strong>亿晶光电</strong> <span class='zbc'>1炸</span></td>
+            <td class='code'>600537</td>
+            <td>10:26:57</td>
+            <td>光伏设备</td>
+        </tr>
+        <tr>
+            <td>43</td>
+            <td><strong>出版传媒</strong> </td>
+            <td class='code'>601999</td>
+            <td>10:35:09</td>
+            <td>出版</td>
+        </tr>
+        <tr>
+            <td>44</td>
+            <td><strong>豪美新材</strong> </td>
+            <td class='code'>002988</td>
+            <td>10:35:12</td>
+            <td>工业金属</td>
+        </tr>
+        <tr>
+            <td>45</td>
+            <td><strong>南京医药</strong> <span class='zbc'>2炸</span></td>
+            <td class='code'>600713</td>
+            <td>10:35:39</td>
+            <td>医药商业</td>
+        </tr>
+        <tr>
+            <td>46</td>
+            <td><strong>华升股份</strong> </td>
+            <td class='code'>600156</td>
+            <td>10:37:24</td>
+            <td>纺织制造</td>
+        </tr>
+        <tr>
+            <td>47</td>
+            <td><strong>美能能源</strong> </td>
+            <td class='code'>001299</td>
+            <td>10:49:06</td>
+            <td>燃气Ⅱ</td>
+        </tr>
+        <tr>
+            <td>48</td>
+            <td><strong>双枪科技</strong> <span class='zbc'>1炸</span></td>
+            <td class='code'>001211</td>
+            <td>11:01:15</td>
+            <td>家居用品</td>
+        </tr>
+        <tr>
+            <td>49</td>
+            <td><strong>珠海中富</strong> </td>
+            <td class='code'>000659</td>
+            <td>11:04:57</td>
+            <td>包装印刷</td>
+        </tr>
+        <tr>
+            <td>50</td>
+            <td><strong>御银股份</strong> <span class='zbc'>3炸</span></td>
+            <td class='code'>002177</td>
+            <td>13:16:21</td>
+            <td>计算机设</td>
+        </tr>
+        <tr>
+            <td>51</td>
+            <td><strong>正和生态</strong> </td>
+            <td class='code'>605069</td>
+            <td>13:20:15</td>
+            <td>环境治理</td>
+        </tr>
+        <tr>
+            <td>52</td>
+            <td><strong>天普股份</strong> <span class='zbc'>3炸</span></td>
+            <td class='code'>605255</td>
+            <td>13:30:26</td>
+            <td>汽车零部</td>
+        </tr>
+        <tr>
+            <td>53</td>
+            <td><strong>晶升股份</strong> <span class='badge cm'>20CM</span><span class='zbc'>7炸</span></td>
+            <td class='code'>688478</td>
+            <td>13:36:17</td>
+            <td>半导体</td>
+        </tr>
+        <tr>
+            <td>54</td>
+            <td><strong>德明利</strong> <span class='zbc'>7炸</span></td>
+            <td class='code'>001309</td>
+            <td>13:37:06</td>
+            <td>半导体</td>
+        </tr>
+        <tr>
+            <td>55</td>
+            <td><strong>凌云股份</strong> <span class='zbc'>1炸</span></td>
+            <td class='code'>600480</td>
+            <td>13:41:56</td>
+            <td>汽车零部</td>
+        </tr>
+        <tr>
+            <td>56</td>
+            <td><strong>雄韬股份</strong> </td>
+            <td class='code'>002733</td>
+            <td>14:00:15</td>
+            <td>电池</td>
+        </tr>
+        <tr>
+            <td>57</td>
+            <td><strong>英唐智控</strong> <span class='badge cm'>20CM</span><span class='zbc'>1炸</span></td>
+            <td class='code'>300131</td>
+            <td>14:03:27</td>
+            <td>其他电子</td>
+        </tr>
+        <tr>
+            <td>58</td>
+            <td><strong>隆基机械</strong> </td>
+            <td class='code'>002363</td>
+            <td>14:05:30</td>
+            <td>汽车零部</td>
+        </tr>
+        <tr>
+            <td>59</td>
+            <td><strong>汇嘉时代</strong> </td>
+            <td class='code'>603101</td>
+            <td>14:14:20</td>
+            <td>一般零售</td>
         </tr>
     </tbody>
   </table>
 </div>
 
-<div class="footer">⚠️ 本报告仅供参考，不构成投资建议。股市有风险，入市需谨慎。</div>
+<div class="footer">
+  免责声明：本报告仅供参考，不构成投资建议<br>
+  数据来源：东方财富 | 生成时间：2026-04-12 03:32:40
+</div>
 
 </body>
 </html>
