@@ -1,0 +1,15 @@
+# Node.js
+node_modules/
+package-lock.json
+
+# Python
+__pycache__/
+*.pyc
+
+# 临时文件
+*.log
+*.tmp
+stocks.json
+
+# macOS
+.DS_Store

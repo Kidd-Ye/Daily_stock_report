@@ -8,9 +8,7 @@ jobs:
   run:
     runs-on: ubuntu-latest
     permissions:
-      contents: write          # 允许写入仓库（提交 HTML）
-      pages: write             # 允许部署 GitHub Pages
-      id-token: write
+      contents: write          # 允许写入仓库（提交 docx）
 
     steps:
       - name: 检出代码
@@ -21,10 +19,17 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: 安装依赖
-        run: pip install requests
+      - name: 安装 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
 
-      - name: 运行程序（抓取数据 + 生成 HTML + 推送）
+      - name: 安装依赖
+        run: |
+          pip install requests
+          npm install
+
+      - name: 运行程序（抓取数据 + 生成 Word + 推送）
         env:
           FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
