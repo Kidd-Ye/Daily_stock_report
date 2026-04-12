@@ -580,7 +580,9 @@ def commit_to_github(filepath, content):
         subprocess.run(["git", "config", "user.name", "GitHub Actions"], check=True, capture_output=True)
         subprocess.run(["git", "config", "user.email", "actions@github.com"], check=True, capture_output=True)
         subprocess.run(["git", "fetch", "origin"], check=True, capture_output=True)
+        subprocess.run(["git", "stash"], check=True, capture_output=True)
         subprocess.run(["git", "pull", "--rebase", "origin", "main"], check=True, capture_output=True)
+        subprocess.run(["git", "stash", "pop"], check=True, capture_output=True)
         subprocess.run(["git", "add", filepath], check=True, capture_output=True)
         subprocess.run([
             "git", "commit", "-m",
