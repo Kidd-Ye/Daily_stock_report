@@ -504,6 +504,19 @@ def send_feishu_report(file_path, stocks, trade_date, backup_url=None):
 
 
 # =============================================
+# 5. 妙想数据源（可选）
+# =============================================
+def get_limit_up_stocks_mx(trade_date=None):
+    """通过妙想 API 获取涨停数据（需要 MX_APIKEY 环境变量）"""
+    try:
+        from fetch_mx_data import get_limit_up_stocks_mx as _mx_fetch
+        return _mx_fetch(trade_date)
+    except ImportError:
+        print("❌ 未找到 fetch_mx_data.py，请确认文件存在")
+        return []
+
+
+# =============================================
 # 主程序
 # =============================================
 if __name__ == "__main__":
@@ -511,12 +524,24 @@ if __name__ == "__main__":
     print("🚀 A股涨停复盘自动推送")
     print("=" * 50)
 
+    # 数据源选择：通过环境变量 DATA_SOURCE 控制
+    # DATA_SOURCE=mx  → 妙想 API（需要 MX_APIKEY）
+    # DATA_SOURCE=eastmoney 或不设置 → 东方财富 push2ex（默认）
+    data_source = os.getenv("DATA_SOURCE", "eastmoney").lower().strip()
+    if data_source not in ("eastmoney", "mx"):
+        print(f"⚠️ 未知的 DATA_SOURCE '{data_source}'，回退到 eastmoney")
+        data_source = "eastmoney"
+    print(f"📊 数据源: {'妙想 API (mx)' if data_source == 'mx' else '东方财富 push2ex (eastmoney)'}")
+
     # 计算交易日期（取前一交易日）
     trade_date = get_trade_date()
     print(f"📅 交易日期: {trade_date}")
 
     # 1. 获取涨停数据
-    stocks = get_limit_up_stocks(trade_date)
+    if data_source == "mx":
+        stocks = get_limit_up_stocks_mx(trade_date)
+    else:
+        stocks = get_limit_up_stocks(trade_date)
     stocks = dedupe_stocks(stocks)
 
     if not stocks:

@@ -39,4 +39,8 @@ jobs:
           FEISHU_RECEIVE_ID_TYPE: ${{ secrets.FEISHU_RECEIVE_ID_TYPE }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+          # 数据源选择: eastmoney（默认）或 mx（妙想 API）
+          DATA_SOURCE: ${{ vars.DATA_SOURCE }}
+          # 妙想 API Key（使用妙想数据源时需配置）
+          MX_APIKEY: ${{ secrets.MX_APIKEY }}
         run: python main.py
