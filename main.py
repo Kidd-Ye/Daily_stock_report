@@ -173,7 +173,7 @@ def commit_to_github(filepath):
         # stash pop 只有在 stash 成功时才执行
         result = subprocess.run(["git", "stash", "pop"], capture_output=True, text=True)
         # 忽略 "No stash entries found" 这类非致命错误
-        subprocess.run(["git", "add", filepath], check=True, capture_output=True)
+        subprocess.run(["git", "add", "-f", filepath], check=True, capture_output=True)
         subprocess.run([
             "git", "commit", "-m",
             f"📈 涨停复盘 {datetime.now().strftime('%Y-%m-%d')}"
