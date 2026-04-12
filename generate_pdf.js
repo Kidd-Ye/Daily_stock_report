@@ -312,15 +312,8 @@ if (require.main === module) {
   const outputFile = process.argv[4] || `涨停复盘_${tradeDate}.pdf`;
   const marketComment = process.argv[5] || null;
 
-  console.log(`📖 读取数据: ${inputFile}`);
   const stocks = JSON.parse(fs.readFileSync(inputFile, 'utf8'));
-
   const html = buildHtml(stocks, tradeDate, marketComment);
-
-  // 保存中间 HTML（调试用）
-  fs.writeFileSync(`/tmp/${tradeDate}_pdf_source.html`, html, 'utf8');
-
-  console.log('🌐 启动 Chromium 生成 PDF...');
 
   (async () => {
     const browser = await puppeteer.launch({
@@ -329,10 +322,8 @@ if (require.main === module) {
       executablePath: await chromium.executablePath(),
       headless: chromium.headless,
     });
-
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'networkidle0' });
-
     await page.pdf({
       path: outputFile,
       format: 'A4',
@@ -342,11 +333,10 @@ if (require.main === module) {
       headerTemplate: `<span></span>`,
       footerTemplate: `<div style="width:100%;text-align:center;font-size:8pt;color:${GRAY};font-family:微软雅黑,sans-serif;">第 <span class="pageNumber"></span> 页 | 免责声明：本报告仅供参考，不构成投资建议</div>`,
     });
-
     await browser.close();
-    console.log(`✅ PDF 生成成功: ${outputFile}`);
+    process.stdout.write('OK:' + outputFile);
   })().catch(err => {
-    console.error('❌ PDF 生成失败:', err.message);
+    process.stderr.write('ERROR:' + err.message);
     process.exit(1);
   });
 }
