@@ -77,12 +77,18 @@ def _normalize_industry(reason):
         return "题材"
     mappings = {
         "自动化设": "自动化设备",
+        "自动化设备": "自动化设备",
         "房地产开": "房地产开发",
+        "房地产开发": "房地产开发",
         "家电零部": "家电零部件",
+        "家电零部件": "家电零部件",
         "汽车零部": "汽车零部件",
+        "汽车零部件": "汽车零部件",
         "电子元器": "电子元器件",
+        "电子元器件": "电子元器件",
         "光学光电": "光学光电",
         "输配电气": "输配电设备",
+        "输配电设备": "输配电设备",
         "通用设备": "通用设备",
         "专用设备": "专用设备",
         "工程机械": "工程机械",
@@ -93,10 +99,13 @@ def _normalize_industry(reason):
         "生物制药": "生物制药",
         "医疗器械": "医疗器械",
         "软件开发": "软件开发",
+        "软件服务": "软件开发",
         "互联网": "互联网服务",
         "通信设备": "通信设备",
+        "通信服务": "通信服务",
         "电子消费": "电子消费",
         "食品饮片": "食品饮料",
+        "食品饮料": "食品饮料",
         "纺织服装": "纺织服装",
         "贵金属": "贵金属",
         "稀土永磁": "稀土永磁",
@@ -108,14 +117,32 @@ def _normalize_industry(reason):
         "人工智能": "人工智能",
         "大模型": "大模型",
         "算力": "算力",
+        "算力租赁": "算力",
         "数据中心": "数据中心",
         "芯片": "芯片",
         "半导体": "半导体",
+        "电力": "电力",
+        "电网设备": "电网设备",
+        "一般零售": "一般零售",
+        "电池": "电池",
+        "黑色金属": "黑色金属",
+        "冶钢原料": "黑色金属",
     }
     for short, full in mappings.items():
         if reason == short or reason.startswith(short):
             return full
     return reason
+
+
+def _normalize_stock_name(name):
+    """规范化股票名称"""
+    if not name:
+        return name
+    name = name.strip()
+    corrections = {
+        "洪田股份": "弘田股份",
+    }
+    return corrections.get(name, name)
 
 
 def dedupe_stocks(stocks):
@@ -573,6 +600,7 @@ if __name__ == "__main__":
     stocks = dedupe_stocks(stocks)
     for s in stocks:
         s["reason"] = _normalize_industry(s.get("reason", ""))
+        s["name"] = _normalize_stock_name(s.get("name", ""))
 
     if not stocks:
         print("❌ 未获取到涨停数据，程序退出")

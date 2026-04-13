@@ -288,7 +288,11 @@ ${boardRows.length ? makeTable(['连板数', '家数', '股票名称（代码）
 <!-- 三、主要涨停板块分析 -->
 <h2>三、主要涨停板块分析</h2>
 ${sortedIndustry.length ? makeTable(['板块名称', '涨停数', '涨停个股', '核心催化'], sortedIndustry.slice(0, 10).map(([name, ss]) => {
-  const reps = ss.slice(0, 4).map(s => `${s.name}${s.bd > 1 ? '(2板)' : ''}`).join('、');
+  const reps = ss.slice(0, 4).map(s => {
+    const bd = s.bd || 1;
+    if (bd >= 2) return `${s.name}(${bd}板)`;
+    return s.name;
+  }).join('、');
   return [name, `${ss.length}只`, reps + (ss.length > 4 ? '等' : ''), ss[0].reason || '题材'];
 }), [2500, 1500, 3360, 2500]) : '<p class="intro" style="color:' + GRAY + '">暂无板块数据</p>'}
 
