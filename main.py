@@ -209,7 +209,7 @@ def get_trade_date():
         if use_today:
             candidates = [d for d in dates_sorted if d <= today_str]
         else:
-            candidates = [d for d in dates_sorted if d < today_str]
+            candidates = [d for d in dates_sorted if d <= today_str]
         if candidates:
             trade_date = candidates[-1]
             print(f"📅 交易日历计算交易日: {trade_date}")
