@@ -165,7 +165,10 @@ function buildHtml(stocks, tradeDate, marketComment) {
     const ss = moreBoardsByBd[bd];
     if (ss && ss.length) {
       const bdName = bd >= 4 ? `${bd}连板` : `${bd}连板`;
-      boardRows.push([bdName, ss.length, ss.map(s => `${s.name}（${s.code}）`).join('、'), ss[0].reason || '题材']);
+      const names = ss.map(s => `${s.name}（${s.code}）`).join('、');
+      const reasons = [...new Set(ss.map(s => s.reason || '题材'))];
+      const reasonText = reasons.length === 1 ? reasons[0] : reasons.join('、');
+      boardRows.push([bdName, ss.length, names, reasonText]);
     }
   });
 

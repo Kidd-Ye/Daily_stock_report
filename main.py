@@ -127,6 +127,13 @@ def _normalize_industry(reason):
         "电池": "电池",
         "黑色金属": "黑色金属",
         "冶钢原料": "黑色金属",
+        "其他电源": "其他电源",
+        "家居用品": "家居用品",
+        "光学光": "光学光电",
+        "电力行": "电力",
+        "电网设": "电网设备",
+        "通信设": "通信设备",
+        "工程机": "工程机械",
     }
     for short, full in mappings.items():
         if reason == short or reason.startswith(short):
