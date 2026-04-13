@@ -71,6 +71,53 @@ def _merge_reason(r1, r2):
     return f"{r1}/{r2}"
 
 
+def _normalize_industry(reason):
+    """规范化行业名称"""
+    if not reason:
+        return "题材"
+    mappings = {
+        "自动化设": "自动化设备",
+        "房地产开": "房地产开发",
+        "家电零部": "家电零部件",
+        "汽车零部": "汽车零部件",
+        "电子元器": "电子元器件",
+        "光学光电": "光学光电",
+        "输配电气": "输配电设备",
+        "通用设备": "通用设备",
+        "专用设备": "专用设备",
+        "工程机械": "工程机械",
+        "铁路公路": "铁路公路",
+        "航运港口": "航运港口",
+        "石油化工": "石油化工",
+        "化学制药": "化学制药",
+        "生物制药": "生物制药",
+        "医疗器械": "医疗器械",
+        "软件开发": "软件开发",
+        "互联网": "互联网服务",
+        "通信设备": "通信设备",
+        "电子消费": "电子消费",
+        "食品饮片": "食品饮料",
+        "纺织服装": "纺织服装",
+        "贵金属": "贵金属",
+        "稀土永磁": "稀土永磁",
+        "锂电池": "锂电池",
+        "光伏设备": "光伏设备",
+        "储能": "储能",
+        "氢能源": "氢能源",
+        "机器人": "机器人",
+        "人工智能": "人工智能",
+        "大模型": "大模型",
+        "算力": "算力",
+        "数据中心": "数据中心",
+        "芯片": "芯片",
+        "半导体": "半导体",
+    }
+    for short, full in mappings.items():
+        if reason == short or reason.startswith(short):
+            return full
+    return reason
+
+
 def dedupe_stocks(stocks):
     """按股票代码去重，保留更完整的数据"""
     by_code = {}
@@ -524,6 +571,8 @@ if __name__ == "__main__":
     # 1. 获取涨停数据
     stocks = get_limit_up_stocks(trade_date)
     stocks = dedupe_stocks(stocks)
+    for s in stocks:
+        s["reason"] = _normalize_industry(s.get("reason", ""))
 
     if not stocks:
         print("❌ 未获取到涨停数据，程序退出")

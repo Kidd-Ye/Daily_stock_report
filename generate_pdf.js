@@ -29,10 +29,29 @@ function escapeHtml(str) {
 
 function formatTime(t) {
   if (!t) return '—';
-  t = String(t);
-  if (t.length === 5) return `${t.slice(0, 2)}:${t.slice(2, 4)}:${t.slice(4)}`;
-  if (t.length === 4) return `${t.slice(0, 2)}:${t.slice(2, 4)}:00`;
-  return t;
+  t = String(t).replace(/\D/g, '');
+  if (t.length < 4) return '—';
+  if (t.length === 4) {
+    const h = parseInt(t.slice(0, 2));
+    const m = parseInt(t.slice(2));
+    if (h > 23 || m > 59) return '—';
+    return `${t.slice(0, 2)}:${t.slice(2)}:00`;
+  }
+  if (t.length === 5) {
+    const h = parseInt(t.slice(0, 2));
+    const m = parseInt(t.slice(2, 4));
+    const s = parseInt(t.slice(4));
+    if (h > 23 || m > 59 || s > 59) return '—';
+    return `${t.slice(0, 2)}:${t.slice(2, 4)}:${t.slice(4)}`;
+  }
+  if (t.length >= 6) {
+    const h = parseInt(t.slice(0, 2));
+    const m = parseInt(t.slice(2, 4));
+    const s = parseInt(t.slice(4, 6));
+    if (h > 23 || m > 59 || s > 59) return '—';
+    return `${t.slice(0, 2)}:${t.slice(2, 4)}:${t.slice(4, 6)}`;
+  }
+  return '—';
 }
 
 // ========== 表格生成器 ==========
@@ -118,9 +137,18 @@ function buildHtml(stocks, tradeDate, marketComment) {
   const sortedIndustry = Object.entries(industryMap).sort((a, b) => b[1].length - a[1].length);
 
   const boardSummary = [];
-  if (board4.length) boardSummary.push(`${board4.length}只4连板`);
-  if (board3.length) boardSummary.push(`${board3.length}只3连板`);
-  if (board2.length) boardSummary.push(`${board2.length}只2连板`);
+  const moreBoardsByBd = {};
+  moreBoards.forEach(s => {
+    const bd = s.bd || 2;
+    if (!moreBoardsByBd[bd]) moreBoardsByBd[bd] = [];
+    moreBoardsByBd[bd].push(s);
+  });
+  const bdLevels = Object.keys(moreBoardsByBd).map(Number).sort((a, b) => b - a);
+  bdLevels.forEach(bd => {
+    if (bd >= 4) boardSummary.push(`${bd}连板`);
+    else if (bd === 3) boardSummary.push('3连板');
+    else if (bd === 2) boardSummary.push('2连板');
+  });
   const boardSummaryText = boardSummary.length
     ? `连板个股共${moreBoards.length}只，${boardSummary.join('、')}，具体如下：`
     : `连板个股共${moreBoards.length}只，具体如下：`;
@@ -130,6 +158,15 @@ function buildHtml(stocks, tradeDate, marketComment) {
   const sortedStocks = [...stocks].sort((a, b) => {
     if (b.bd !== a.bd) return (b.bd || 1) - (a.bd || 1);
     return String(a.first_time || '').localeCompare(String(b.first_time || ''));
+  });
+
+  const boardRows = [];
+  bdLevels.forEach(bd => {
+    const ss = moreBoardsByBd[bd];
+    if (ss && ss.length) {
+      const bdName = bd >= 4 ? `${bd}连板` : `${bd}连板`;
+      boardRows.push([bdName, ss.length, ss.map(s => `${s.name}（${s.code}）`).join('、'), ss[0].reason || '题材']);
+    }
   });
 
   const html = `<!DOCTYPE html>
@@ -246,11 +283,7 @@ ${makeTable(['指标', '数值', '备注'], [
 <!-- 二、连板梯队 -->
 <h2>二、连板梯队</h2>
 <p class="intro">${boardSummaryText}</p>
-${board4.length || board3.length || board2.length ? makeTable(['连板数', '家数', '股票名称（代码）', '涨停原因 / 概念'], [
-  ...(board4.length ? [['4连板', board4.length, board4.map(s => `${s.name}（${s.code}）`).join('、'), board4[0].reason || '并购重组']] : []),
-  ...(board3.length ? [['3连板', board3.length, board3.map(s => `${s.name}（${s.code}）`).join('、'), board3[0].reason || '算力租赁']] : []),
-  ...(board2.length ? [['2连板', board2.length, board2.slice(0, 5).map(s => `${s.name}（${s.code}）`).join('、') + (board2.length > 5 ? '...' : ''), board2[0].reason || '题材']] : []),
-], [1500, 1200, 4160, 2500]) : '<p class="intro" style="color:' + GRAY + '">暂无连板数据</p>'}
+${boardRows.length ? makeTable(['连板数', '家数', '股票名称（代码）', '涨停原因 / 概念'], boardRows, [1500, 1200, 4160, 2500]) : '<p class="intro" style="color:' + GRAY + '">暂无连板数据</p>'}
 
 <!-- 三、主要涨停板块分析 -->
 <h2>三、主要涨停板块分析</h2>
