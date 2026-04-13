@@ -200,6 +200,12 @@ def get_trade_date():
     if dates:
         dates_sorted = sorted(dates)
         today_str = today.strftime("%Y%m%d")
+        if today_str not in dates_sorted:
+            print("📅 今日不在交易日历中，强制刷新...")
+            new_dates = _fetch_trading_calendar_from_eastmoney(today)
+            if new_dates:
+                _save_trading_calendar(new_dates)
+                dates_sorted = sorted(new_dates)
         if use_today:
             candidates = [d for d in dates_sorted if d <= today_str]
         else:
