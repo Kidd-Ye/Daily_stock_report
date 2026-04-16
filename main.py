@@ -11,6 +11,7 @@ import json
 import os
 import subprocess
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 
 # =============================================
@@ -18,6 +19,11 @@ from datetime import datetime, timedelta
 # =============================================
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 CALENDAR_FILE = os.path.join(ROOT_DIR, "trading_calendar.json")
+SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
+
+
+def now_shanghai():
+    return datetime.now(SHANGHAI_TZ)
 
 
 def _date_str_to_date(s):
@@ -200,7 +206,7 @@ def _load_trading_calendar():
 def _save_trading_calendar(dates):
     try:
         payload = {
-            "updated_at": datetime.now().strftime("%Y-%m-%d"),
+            "updated_at": now_shanghai().strftime("%Y-%m-%d"),
             "dates": sorted(dates),
         }
         with open(CALENDAR_FILE, "w", encoding="utf-8") as f:
@@ -258,7 +264,7 @@ def _fetch_trading_calendar_from_eastmoney(today, days=400):
 
 
 def ensure_trading_calendar():
-    today = datetime.now().date()
+    today = now_shanghai().date()
     dates, updated_at = _load_trading_calendar()
     if _calendar_is_stale(dates, updated_at, today):
         print("📅 交易日历缺失或过期，尝试在线更新...")
@@ -275,8 +281,10 @@ def get_trade_date():
         print(f"📌 使用环境变量指定交易日: {env_date}")
         return env_date
 
-    today = datetime.now().date()
+    now = now_shanghai()
+    today = now.date()
     use_today = os.getenv("USE_TODAY_IF_TRADE_DAY", "").lower() in ("1", "true", "yes")
+    cutoff_hour = int(os.getenv("TRADE_DAY_CUTOFF_HOUR", "15"))
     dates = ensure_trading_calendar()
     if dates:
         dates_sorted = sorted(dates)
@@ -287,10 +295,13 @@ def get_trade_date():
             if new_dates:
                 _save_trading_calendar(new_dates)
                 dates_sorted = sorted(new_dates)
-        if use_today:
-            candidates = [d for d in dates_sorted if d <= today_str]
-        else:
-            candidates = [d for d in dates_sorted if d <= today_str]
+
+        # 收盘后优先取当天；workflow 也可显式通过 USE_TODAY_IF_TRADE_DAY 开启该行为。
+        if today_str in dates_sorted and (use_today or now.hour >= cutoff_hour):
+            print(f"📅 收盘后使用当日交易日: {today_str}")
+            return today_str
+
+        candidates = [d for d in dates_sorted if d < today_str]
         if candidates:
             trade_date = candidates[-1]
             print(f"📅 交易日历计算交易日: {trade_date}")
@@ -302,10 +313,12 @@ def get_trade_date():
     if today.weekday() in (5, 6):  # 周六、周日
         return (today - timedelta(days=today.weekday() - 4)).strftime("%Y%m%d")
     return (today - timedelta(days=1)).strftime("%Y%m%d")
+
+
 def get_limit_up_stocks(trade_date=None):
     """通过东方财富 push2ex API 获取涨停数据"""
     if trade_date is None:
-        trade_date = datetime.now().strftime("%Y%m%d")
+        trade_date = now_shanghai().strftime("%Y%m%d")
 
     print(f"📥 正在获取涨停数据（{trade_date}）...")
 
@@ -370,7 +383,7 @@ def _get_limit_up_from_clist():
         "fltt": 2, "invt": 2, "fid": "f3",
         "fs": "m:0+t:6+f:!22,m:0+t:80+f:!22,m:1+t:2+f:!22,m:1+t:23+f:!22",
         "fields": "f2,f3,f4,f5,f6,f7,f8,f9,f10,f12,f14,f15,f16,f17,f18",
-        "_": int(datetime.now().timestamp() * 1000)
+        "_": int(now_shanghai().timestamp() * 1000)
     }
     headers = {"User-Agent": "Mozilla/5.0", "Referer": "http://quote.eastmoney.com/"}
 
@@ -464,7 +477,7 @@ def commit_to_github(filepath):
         subprocess.run(["git", "add", "-f", filepath], check=True, capture_output=True, cwd=ROOT_DIR)
         subprocess.run([
             "git", "commit", "-m",
-            f"📈 涨停复盘 {datetime.now().strftime('%Y-%m-%d')}"
+            f"📈 涨停复盘 {now_shanghai().strftime('%Y-%m-%d')}"
         ], check=True, capture_output=True, cwd=ROOT_DIR)
         subprocess.run(["git", "push", remote_url, "main"], check=True, capture_output=True, cwd=ROOT_DIR)
 
